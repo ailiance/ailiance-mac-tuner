@@ -1,0 +1,1424 @@
+#!/usr/bin/env python3
+"""LAS conversion: Qwen3.5-35B-A3B MoE → SpikingKiki-35B-A3B.
+
+This is the most architecturally interesting conversion in the micro-kiki
+pipeline: a 256-expert MoE (3B active per token) transformed into a spiking
+network where expert routing is preserved losslessly via rate-coded identity
+activations on the router and ReLU-coded activations on each expert FFN.
+
+Key design choices:
+- Router converted with activation="identity" — signed logits kept intact
+  so top-k expert selection is preserved (same semantics as LASConverter MoE).
+- Expert FFNs converted with activation="relu" — standard rate-code path.
+- Attention projections converted with activation="identity" — residual
+  stream stability.
+- Layer-by-layer with progress logging and resumable state.
+- ~40h estimated wall time on Mac Studio M3 Ultra; --resume skips layers
+  already present in the output directory.
+
+Architecture of Qwen3.5-35B-A3B per transformer block:
+  - Attention: q_proj, k_proj, v_proj, o_proj
+  - MoE FFN: gate (router 7168→256), 256 experts each with gate_proj +
+    up_proj + down_proj (SwiGLU pattern)
+  - Total ~94 transformer blocks
+
+Architecture of Qwen3.6-35B-A3B (hybrid attention, 40 layers):
+  - full_attention layers (1-in-4): standard self_attn.{q,k,v,o}_proj
+  - linear_attention layers (the rest): GLA-style linear_attn with 5
+    projections (in_proj_a, in_proj_b, in_proj_qkv, in_proj_z, out_proj)
+    plus 4 non-linear tensors copied verbatim (A_log, conv1d, dt_bias,
+    norm). The 5 linear projections use activation="identity".
+
+Usage:
+  uv run python scripts/convert_spikingkiki_35b.py \\
+      --input  /path/to/Qwen3.5-35B-A3B \\
+      --output /path/to/SpikingKiki-35B-A3B \\
+      --timesteps 128 \\
+      --resume
+
+  # Dry-run (no torch required):
+  uv run python scripts/convert_spikingkiki_35b.py --dry-run
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RESULTS_DIR = REPO_ROOT / "results"
+CONFIG_PATH = REPO_ROOT / "models" / "qwen3.5-35b-a3b" / "config.json"
+
+# Qwen3.5-35B-A3B architecture constants
+NUM_LAYERS = 94
+NUM_EXPERTS = 256
+TOP_K = 8  # Qwen3.5-35B-A3B uses top-8 routing
+HIDDEN_DIM = 7168
+NUM_ATTENTION_HEADS = 64
+NUM_KV_HEADS = 4
+HEAD_DIM = 112
+EXPERT_INTERMEDIATE = 2048  # per-expert intermediate dim
+SHARED_EXPERT_INTERMEDIATE = 7168
+VOCAB_SIZE = 151936
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("convert_35b")
+
+
+# ---------------------------------------------------------------------------
+# Layer map generation (pure Python, no torch)
+# ---------------------------------------------------------------------------
+
+
+# Qwen3.6 linear_attn structure — see docs/specs and config.layer_types.
+# Five modules are standard Linear → LAS-convertible with identity activation.
+# Four tensors are non-linear state (SSM gate, conv kernel, time bias, norm)
+# and are copied verbatim into the spiking output without LAS conversion.
+LINEAR_ATTN_PROJ_MODULES = (
+    "in_proj_a",
+    "in_proj_b",
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj",
+)
+LINEAR_ATTN_PASSTHROUGH_TENSORS = (
+    "A_log",
+    "conv1d",
+    "dt_bias",
+    "norm",
+)
+
+
+def _is_linear_attention_type(layer_type: str | None) -> bool:
+    """Return True when the given config layer_type denotes GLA linear attention.
+
+    Accepts the Qwen3.6 spelling ``linear_attention`` and a handful of
+    common aliases so future configs don't need a script change.
+    """
+    if not layer_type:
+        return False
+    lt = layer_type.lower()
+    return lt in {
+        "linear_attention",
+        "linear_attn",
+        "gated_linear_attention",
+        "gla",
+    }
+
+
+def build_layer_map(
+    num_layers: int = NUM_LAYERS,
+    num_experts: int = NUM_EXPERTS,
+    layer_types: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Return the canonical layer map for Qwen3.5 or Qwen3.6 35B-A3B.
+
+    Each entry describes one logical conversion unit with its weight key
+    path inside the HuggingFace state_dict.
+
+    Parameters
+    ----------
+    num_layers : int
+        Number of transformer blocks.
+    num_experts : int
+        Number of MoE experts per block.
+    layer_types : list[str] | None
+        Optional per-layer attention type from ``config.json``. When
+        ``None`` (default), every block is treated as standard
+        ``self_attn`` — preserves Qwen3.5 behaviour. When provided, the
+        per-layer value picks between:
+          * ``full_attention`` / anything non-linear → ``self_attn.*``
+          * ``linear_attention`` → 5 linear ``linear_attn.*`` projections
+            plus 4 passthrough tensors (``A_log``, ``conv1d``,
+            ``dt_bias``, ``norm``) copied verbatim.
+
+    Returns
+    -------
+    list of dicts with keys:
+        layer_id   : int   — transformer block index
+        kind       : str   — "attn_proj" | "linear_attn_proj"
+                             | "linear_attn_passthrough" | "moe_router"
+                             | "moe_expert_ffn"
+        key_prefix : str   — state_dict key prefix
+        expert_id  : int | None
+        activation : str   — "identity", "relu", or "passthrough"
+        converted  : bool  — False initially (set True when done)
+
+    Notes
+    -----
+    The ``attn_proj`` kind continues to denote the 4 standard self-attn
+    projections (q/k/v/o) — preserved for Qwen3.5 backward compat. The
+    new hybrid kinds (``linear_attn_proj``, ``linear_attn_passthrough``)
+    only appear when ``layer_types`` is supplied and marks a layer as
+    linear attention.
+    """
+    entries: list[dict[str, Any]] = []
+    for layer_idx in range(num_layers):
+        prefix = f"model.layers.{layer_idx}"
+        layer_type = layer_types[layer_idx] if layer_types else None
+
+        if _is_linear_attention_type(layer_type):
+            # Linear attention block: 5 GLA projections + 4 passthroughs.
+            for proj in LINEAR_ATTN_PROJ_MODULES:
+                entries.append(
+                    {
+                        "layer_id": layer_idx,
+                        "kind": "linear_attn_proj",
+                        "key_prefix": f"{prefix}.linear_attn.{proj}",
+                        "expert_id": None,
+                        "activation": "identity",
+                        "converted": False,
+                    }
+                )
+            for tensor in LINEAR_ATTN_PASSTHROUGH_TENSORS:
+                entries.append(
+                    {
+                        "layer_id": layer_idx,
+                        "kind": "linear_attn_passthrough",
+                        "key_prefix": f"{prefix}.linear_attn.{tensor}",
+                        "expert_id": None,
+                        "activation": "passthrough",
+                        "converted": False,
+                    }
+                )
+        else:
+            # Standard self-attention (Qwen3.5 base and Qwen3.6 full layers).
+            for proj in ("q_proj", "k_proj", "v_proj", "o_proj"):
+                entries.append(
+                    {
+                        "layer_id": layer_idx,
+                        "kind": "attn_proj",
+                        "key_prefix": f"{prefix}.self_attn.{proj}",
+                        "expert_id": None,
+                        "activation": "identity",
+                        "converted": False,
+                    }
+                )
+
+        # MoE router — identity activation (signed logits must be preserved)
+        entries.append(
+            {
+                "layer_id": layer_idx,
+                "kind": "moe_router",
+                "key_prefix": f"{prefix}.mlp.gate",
+                "expert_id": None,
+                "activation": "identity",
+                "converted": False,
+            }
+        )
+
+        # MoE expert FFNs — relu activation (SwiGLU gate + up + down)
+        for expert_id in range(num_experts):
+            for proj in ("gate_proj", "up_proj", "down_proj"):
+                entries.append(
+                    {
+                        "layer_id": layer_idx,
+                        "kind": "moe_expert_ffn",
+                        "key_prefix": (
+                            f"{prefix}.mlp.experts.{expert_id}.{proj}"
+                        ),
+                        "expert_id": expert_id,
+                        "activation": "relu",
+                        "converted": False,
+                    }
+                )
+
+    return entries
+
+
+def layer_map_stats(layer_map: list[dict[str, Any]]) -> dict[str, int]:
+    """Summarise the layer map by kind."""
+    counts: dict[str, int] = {}
+    for entry in layer_map:
+        counts[entry["kind"]] = counts.get(entry["kind"], 0) + 1
+    counts["total"] = len(layer_map)
+    return counts
+
+
+# ---------------------------------------------------------------------------
+# Resume logic — check which layers are already saved
+# ---------------------------------------------------------------------------
+
+
+def load_resume_state(output_dir: Path) -> set[str]:
+    """Return set of key_prefixes already converted (saved to disk)."""
+    state_file = output_dir / ".convert_state.json"
+    if not state_file.exists():
+        return set()
+    try:
+        data = json.loads(state_file.read_text())
+        return set(data.get("converted_keys", []))
+    except (json.JSONDecodeError, OSError):
+        log.warning("could not parse resume state — starting fresh")
+        return set()
+
+
+def save_resume_state(output_dir: Path, converted_keys: set[str]) -> None:
+    """Persist the set of converted key_prefixes."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    state_file = output_dir / ".convert_state.json"
+    state_file.write_text(
+        json.dumps({"converted_keys": sorted(converted_keys)}, indent=2)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Torch-dependent conversion (guarded — works without torch for testing)
+# ---------------------------------------------------------------------------
+
+
+def _try_import_torch() -> Any:
+    try:
+        import torch  # type: ignore
+        return torch
+    except ImportError:
+        return None
+
+
+def _try_import_transformers() -> Any:
+    try:
+        from transformers import AutoModelForCausalLM, AutoConfig  # type: ignore
+        return AutoModelForCausalLM, AutoConfig
+    except ImportError:
+        return None, None
+
+
+def _extract_linear_weights(module: Any) -> dict[str, Any]:
+    """Extract weight + bias as numpy from a torch.nn.Linear."""
+    import numpy as np
+    w = module.weight.detach().cpu().float().numpy()
+    b = (
+        module.bias.detach().cpu().float().numpy()
+        if getattr(module, "bias", None) is not None
+        else None
+    )
+    return {"weight": w, "bias": b}
+
+
+def _detect_fused_experts(experts_module: Any) -> bool:
+    """Return True when ``experts_module`` uses Qwen3.6's fused layout.
+
+    Qwen3.6-35B-A3B ships ``Qwen3_5MoeExperts``: a single ``nn.Module`` that
+    holds two fused parameters (``gate_up_proj`` and ``down_proj``) shaped
+    ``(num_experts, …)`` instead of the Qwen3.5 ``ModuleList`` of per-expert
+    ``nn.Linear`` triplets. The fused module has neither ``__len__`` nor
+    ``__getitem__``, so the old per-expert iteration crashes on it.
+    """
+    return hasattr(experts_module, "gate_up_proj") and hasattr(
+        experts_module, "down_proj"
+    )
+
+
+def _num_experts(experts_module: Any, is_fused: bool) -> int:
+    """Return the expert count regardless of layout."""
+    if is_fused:
+        gup = experts_module.gate_up_proj
+        t = gup.weight if hasattr(gup, "weight") else gup
+        return int(t.shape[0])
+    return len(experts_module)
+
+
+def _get_expert_weights(
+    experts_module: Any,
+    expert_id: int,
+    is_fused: bool,
+) -> dict[str, dict[str, Any]]:
+    """Return ``{"gate_proj": wb, "up_proj": wb, "down_proj": wb}`` slices.
+
+    Each value matches the ``_extract_linear_weights`` shape
+    (``{"weight": np.ndarray, "bias": np.ndarray | None}``). Biases are
+    ``None`` for MoE expert FFNs in both Qwen3.5 and Qwen3.6.
+
+    For the Qwen3.6 fused layout, ``gate_up_proj.weight`` has shape
+    ``(num_experts, 2 * intermediate, hidden)`` — the first half along axis 1
+    is the gate projection, the second half is the up projection. The
+    ``down_proj.weight`` has shape ``(num_experts, hidden, intermediate)``.
+    For the Qwen3.5 ModuleList layout, we simply delegate to
+    ``_extract_linear_weights`` on each per-expert submodule.
+    """
+    import numpy as np
+
+    if is_fused:
+        # Qwen3.6 stores experts as Parameters directly (not Linear modules).
+        # Older HF may wrap in nn.Linear. Handle both.
+        gup = experts_module.gate_up_proj
+        dp = experts_module.down_proj
+        gate_up = gup.weight if hasattr(gup, "weight") else gup  # (E, 2*I, H)
+        down = dp.weight if hasattr(dp, "weight") else dp         # (E, H, I)
+        intermediate = gate_up.shape[1] // 2
+        gate_w = gate_up[expert_id, :intermediate, :].detach().cpu().float().numpy()
+        up_w = gate_up[expert_id, intermediate:, :].detach().cpu().float().numpy()
+        down_w = down[expert_id].detach().cpu().float().numpy()
+        return {
+            "gate_proj": {"weight": gate_w, "bias": None},
+            "up_proj": {"weight": up_w, "bias": None},
+            "down_proj": {"weight": down_w, "bias": None},
+        }
+
+    expert = experts_module[expert_id]
+    return {
+        proj_name: _extract_linear_weights(getattr(expert, proj_name))
+        for proj_name in ("gate_proj", "up_proj", "down_proj")
+    }
+
+
+def _save_passthrough_tensor(
+    tensor: Any, key: str, output_dir: Path
+) -> None:
+    """Copy a non-linear tensor (A_log / conv1d / dt_bias / norm) verbatim.
+
+    These are SSM state / conv kernels / RMSNorm weights — they have no
+    LAS conversion; we just dump them as ``.npz`` so the spiking
+    checkpoint remains self-contained.
+    """
+    import numpy as np
+    safe_key = key.replace(".", "_").replace("/", "_")
+    out_path = output_dir / f"{safe_key}.npz"
+    # Conv1d is a nn.Conv1d; its .weight is a tensor too. Handle both.
+    if hasattr(tensor, "weight") and not hasattr(tensor, "detach"):
+        arr = tensor.weight.detach().cpu().float().numpy()
+    else:
+        arr = tensor.detach().cpu().float().numpy()
+    np.savez_compressed(out_path, tensor=arr, passthrough=np.array([1]))
+
+
+def convert_block_torch(
+    model: Any,
+    layer_idx: int,
+    converter: Any,
+    spike_stats: dict[str, Any],
+    converted_keys: set[str],
+    output_dir: Path,
+    timesteps: int,
+    layer_types: list[str] | None = None,
+) -> dict[str, Any]:
+    """Convert one transformer block, saving spiking layers to disk.
+
+    Dispatches on layer_types[layer_idx] when provided (Qwen3.6 hybrid):
+    linear_attention layers emit 5 LAS-converted projections and 4
+    passthrough tensors; full_attention (and Qwen3.5 default) emit the
+    4 standard q/k/v/o projections.
+
+    Returns a dict of spike stats for the block (counts + activation bounds).
+    """
+    import numpy as np
+    from src.spiking.las_converter import LASConverter
+
+    block = model.model.layers[layer_idx]
+    prefix = f"model.layers.{layer_idx}"
+    layer_type = layer_types[layer_idx] if layer_types else None
+    block_stats: dict[str, Any] = {
+        "layer_id": layer_idx,
+        "layer_type": layer_type or "full_attention",
+        "projections": {},
+    }
+
+    # --- Attention projections (dispatch on layer type) ---
+    if _is_linear_attention_type(layer_type):
+        attn = block.linear_attn
+        # 5 LAS-convertible linear projections.
+        for proj_name in LINEAR_ATTN_PROJ_MODULES:
+            key = f"{prefix}.linear_attn.{proj_name}"
+            if key in converted_keys:
+                log.debug("skip (resume) %s", key)
+                continue
+            proj_module = getattr(attn, proj_name)
+            weights = _extract_linear_weights(proj_module)
+            spiking = converter.convert_layer(weights, activation="identity")
+            _save_spiking_layer(spiking, key, output_dir)
+            w_abs_max = float(np.abs(weights["weight"]).max())
+            block_stats["projections"][f"linear_attn.{proj_name}"] = {
+                "in": spiking.in_features,
+                "out": spiking.out_features,
+                "w_abs_max": round(w_abs_max, 4),
+            }
+            converted_keys.add(key)
+
+        # 4 passthrough tensors (A_log, conv1d, dt_bias, norm) — verbatim.
+        passthrough_stats: dict[str, Any] = {}
+        for tensor_name in LINEAR_ATTN_PASSTHROUGH_TENSORS:
+            key = f"{prefix}.linear_attn.{tensor_name}"
+            if key in converted_keys:
+                log.debug("skip (resume) %s", key)
+                continue
+            try:
+                obj = getattr(attn, tensor_name)
+            except AttributeError:
+                log.warning("linear_attn.%s missing on layer %d",
+                            tensor_name, layer_idx)
+                continue
+            _save_passthrough_tensor(obj, key, output_dir)
+            passthrough_stats[tensor_name] = "copied"
+            converted_keys.add(key)
+        if passthrough_stats:
+            block_stats["linear_attn_passthrough"] = passthrough_stats
+    else:
+        attn = block.self_attn
+        for proj_name in ("q_proj", "k_proj", "v_proj", "o_proj"):
+            key = f"{prefix}.self_attn.{proj_name}"
+            if key in converted_keys:
+                log.debug("skip (resume) %s", key)
+                continue
+            proj_module = getattr(attn, proj_name)
+            weights = _extract_linear_weights(proj_module)
+            spiking = converter.convert_layer(weights, activation="identity")
+            _save_spiking_layer(spiking, key, output_dir)
+            w_abs_max = float(np.abs(weights["weight"]).max())
+            block_stats["projections"][proj_name] = {
+                "in": spiking.in_features,
+                "out": spiking.out_features,
+                "w_abs_max": round(w_abs_max, 4),
+            }
+            converted_keys.add(key)
+
+    # --- MoE router ---
+    router_key = f"{prefix}.mlp.gate"
+    if router_key not in converted_keys:
+        router_weights = _extract_linear_weights(block.mlp.gate)
+        spiking_router = converter.convert_layer(
+            router_weights, activation="identity"
+        )
+        _save_spiking_layer(spiking_router, router_key, output_dir)
+        block_stats["router"] = {
+            "in": spiking_router.in_features,
+            "out": spiking_router.out_features,
+        }
+        converted_keys.add(router_key)
+    else:
+        log.debug("skip (resume) %s", router_key)
+
+    # --- MoE experts ---
+    # Dispatch on layout: Qwen3.6 ships a fused ``Qwen3_5MoeExperts`` module
+    # (no ``__len__`` / ``__getitem__``) whereas Qwen3.5 uses a ModuleList of
+    # per-expert ``nn.Linear`` triplets. ``_get_expert_weights`` hides the
+    # difference behind a uniform dict per expert.
+    experts_module = block.mlp.experts
+    is_fused = _detect_fused_experts(experts_module)
+    num_experts = _num_experts(experts_module, is_fused)
+    if is_fused:
+        log.debug("layer %d: fused MoE experts (num=%d)", layer_idx, num_experts)
+    expert_spike_counts: list[float] = []
+    for expert_id in range(num_experts):
+        # Compute only-if-needed: skip the slice/extract when every projection
+        # for this expert is already in the resume set.
+        needed = [
+            proj
+            for proj in ("gate_proj", "up_proj", "down_proj")
+            if f"{prefix}.mlp.experts.{expert_id}.{proj}" not in converted_keys
+        ]
+        if not needed:
+            continue
+        expert_weights = _get_expert_weights(experts_module, expert_id, is_fused)
+        for proj_name in ("gate_proj", "up_proj", "down_proj"):
+            key = f"{prefix}.mlp.experts.{expert_id}.{proj_name}"
+            if key in converted_keys:
+                continue
+            weights = expert_weights[proj_name]
+            spiking = converter.convert_layer(weights, activation="relu")
+            _save_spiking_layer(spiking, key, output_dir)
+            # Rough spike count estimate via max weight * timesteps
+            est_spikes = float(
+                np.abs(weights["weight"]).mean() * timesteps
+            )
+            expert_spike_counts.append(est_spikes)
+            converted_keys.add(key)
+
+    if expert_spike_counts:
+        block_stats["expert_spike_rate_mean"] = round(
+            float(np.mean(expert_spike_counts)), 4
+        )
+
+    return block_stats
+
+
+def _save_spiking_layer(spiking: Any, key: str, output_dir: Path) -> None:
+    """Save a SpikingLinear weight array as .npz alongside a metadata JSON."""
+    import numpy as np
+    safe_key = key.replace(".", "_").replace("/", "_")
+    out_path = output_dir / f"{safe_key}.npz"
+    np.savez_compressed(
+        out_path,
+        weight=spiking.weight,
+        bias=spiking.bias if spiking.bias is not None else np.array([]),
+        timesteps=np.array([spiking.timesteps]),
+        max_rate=np.array([spiking.max_rate]),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Metadata assembly
+# ---------------------------------------------------------------------------
+
+
+def build_metadata(
+    args: argparse.Namespace,
+    layer_map: list[dict[str, Any]],
+    spike_stats: dict[str, Any],
+    elapsed_s: float,
+    status: str,
+) -> dict[str, Any]:
+    """Assemble the results JSON structure."""
+    map_stats = layer_map_stats(layer_map)
+    converted = sum(1 for e in layer_map if e.get("converted"))
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "status": status,
+        "input": str(args.input),
+        "output": str(args.output),
+        "timesteps": args.timesteps,
+        "model_info": {
+            "name": "Qwen3.5-35B-A3B",
+            "num_layers": NUM_LAYERS,
+            "num_experts": NUM_EXPERTS,
+            "top_k": TOP_K,
+            "hidden_dim": HIDDEN_DIM,
+            "expert_intermediate_dim": EXPERT_INTERMEDIATE,
+        },
+        "layer_map_stats": map_stats,
+        "converted_layers": converted,
+        "total_layers": len(layer_map),
+        "elapsed_s": round(elapsed_s, 1),
+        "spike_stats": spike_stats,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Story-27: Theoretical analysis (no weights, no GPU)
+# ---------------------------------------------------------------------------
+
+
+def load_model_config(config_path: Path | None = None) -> dict[str, Any]:
+    """Load the model config.json for architecture analysis.
+
+    Falls back to hardcoded constants if no config file is available.
+
+    Supports both flat (Qwen3.5-style) and nested `text_config`
+    (Qwen3.6-style multimodal) config layouts. When a `text_config`
+    key is present, its fields are flattened into the top level so
+    downstream consumers keep working with the simple `hidden_size`,
+    `num_hidden_layers`, etc. keys.
+    """
+    path = config_path or CONFIG_PATH
+    if path.exists():
+        raw = json.loads(path.read_text())
+        # Qwen3.6 multimodal wraps the LM config under "text_config".
+        if "text_config" in raw and isinstance(raw["text_config"], dict):
+            merged = dict(raw)
+            merged.update(raw["text_config"])
+            return merged
+        return raw
+    log.warning("config.json not found at %s, using hardcoded constants", path)
+    return {
+        "hidden_size": HIDDEN_DIM,
+        "num_hidden_layers": NUM_LAYERS,
+        "num_attention_heads": NUM_ATTENTION_HEADS,
+        "num_key_value_heads": NUM_KV_HEADS,
+        "head_dim": HEAD_DIM,
+        "num_experts": NUM_EXPERTS,
+        "num_experts_per_tok": TOP_K,
+        "moe_intermediate_size": EXPERT_INTERMEDIATE,
+        "shared_expert_intermediate_size": SHARED_EXPERT_INTERMEDIATE,
+        "vocab_size": VOCAB_SIZE,
+    }
+
+
+def _count_params_linear(in_dim: int, out_dim: int, bias: bool = False) -> int:
+    """Parameter count for a single linear layer."""
+    return in_dim * out_dim + (out_dim if bias else 0)
+
+
+def analyze_layer_convertibility(config: dict[str, Any]) -> dict[str, Any]:
+    """Analyze which layers can be converted to spiking and which cannot.
+
+    Returns a structured dict with per-layer-type analysis.
+    """
+    hidden = config["hidden_size"]
+    n_layers = config["num_hidden_layers"]
+    n_heads = config["num_attention_heads"]
+    n_kv_heads = config["num_key_value_heads"]
+    head_dim = config["head_dim"]
+    n_experts = config["num_experts"]
+    top_k = config["num_experts_per_tok"]
+    expert_inter = config["moe_intermediate_size"]
+    shared_inter = config.get("shared_expert_intermediate_size", 0)
+    has_bias = config.get("attention_bias", False)
+
+    # --- Attention projections (fully convertible) ---
+    q_dim = n_heads * head_dim        # 64 * 112 = 7168
+    k_dim = n_kv_heads * head_dim     # 4 * 112 = 448
+    v_dim = n_kv_heads * head_dim     # 4 * 112 = 448
+    o_dim = hidden                     # 7168
+
+    attn_params_per_layer = (
+        _count_params_linear(hidden, q_dim, has_bias)
+        + _count_params_linear(hidden, k_dim, has_bias)
+        + _count_params_linear(hidden, v_dim, has_bias)
+        + _count_params_linear(q_dim, o_dim, has_bias)
+    )
+
+    # --- MoE router (convertible with identity activation) ---
+    router_params_per_layer = _count_params_linear(hidden, n_experts, False)
+
+    # --- MoE expert FFNs (research needed — SwiGLU complication) ---
+    # Each expert has: gate_proj (hidden -> inter), up_proj (hidden -> inter),
+    # down_proj (inter -> hidden). SwiGLU: silu(gate) * up, then down.
+    expert_params = (
+        _count_params_linear(hidden, expert_inter, False)  # gate
+        + _count_params_linear(hidden, expert_inter, False)  # up
+        + _count_params_linear(expert_inter, hidden, False)  # down
+    )
+    expert_params_total = expert_params * n_experts
+
+    # Shared expert (if any)
+    shared_expert_params = 0
+    if shared_inter > 0:
+        shared_expert_params = (
+            _count_params_linear(hidden, shared_inter, False)  # gate
+            + _count_params_linear(hidden, shared_inter, False)  # up
+            + _count_params_linear(shared_inter, hidden, False)  # down
+        )
+
+    total_params_per_layer = (
+        attn_params_per_layer
+        + router_params_per_layer
+        + expert_params_total
+        + shared_expert_params
+    )
+
+    # Embedding + lm_head (not converted)
+    embed_params = config.get("vocab_size", VOCAB_SIZE) * hidden
+    lm_head_params = embed_params  # typically tied but counted separately
+
+    return {
+        "attention": {
+            "convertible": True,
+            "method": "LAS identity activation (signed logits preserved)",
+            "projections": {
+                "q_proj": {"shape": [hidden, q_dim], "params": _count_params_linear(hidden, q_dim, has_bias)},
+                "k_proj": {"shape": [hidden, k_dim], "params": _count_params_linear(hidden, k_dim, has_bias)},
+                "v_proj": {"shape": [hidden, v_dim], "params": _count_params_linear(hidden, v_dim, has_bias)},
+                "o_proj": {"shape": [q_dim, o_dim], "params": _count_params_linear(q_dim, o_dim, has_bias)},
+            },
+            "params_per_layer": attn_params_per_layer,
+            "total_params": attn_params_per_layer * n_layers,
+            "notes": [
+                "GQA (grouped query attention) with 64 Q heads, 4 KV heads",
+                "Identity activation preserves signed values for softmax",
+                "Rate-coded LIF with T>=64 achieves <2% relative error",
+                "Residual stream integrity maintained via ANN-equivalent path",
+            ],
+        },
+        "moe_router": {
+            "convertible": True,
+            "method": "LAS identity activation (expert selection from signed logits)",
+            "params_per_layer": router_params_per_layer,
+            "total_params": router_params_per_layer * n_layers,
+            "notes": [
+                f"Router: {hidden} -> {n_experts} (top-{top_k} selection)",
+                "Identity activation critical: signed logits determine ranking",
+                "ANN-equivalent routing used for selection (spiking for energy)",
+                "norm_topk_prob normalises expert combination weights",
+            ],
+        },
+        "moe_expert_ffn": {
+            "convertible": "partial",
+            "method": "LAS relu activation on gate/up/down (SwiGLU issue)",
+            "params_per_expert": expert_params,
+            "num_experts": n_experts,
+            "active_per_token": top_k,
+            "total_params": expert_params_total * n_layers,
+            "blocking_issues": [
+                "SwiGLU gate uses SiLU (x * sigmoid(x)), not ReLU -- "
+                "rate-coded LIF only approximates ReLU natively",
+                "Signed intermediate activations from SiLU need two-channel "
+                "encoding (positive + negative spike trains)",
+                "gate_proj * up_proj element-wise multiply has no direct "
+                "spiking equivalent -- requires temporal correlation coding",
+            ],
+            "research_paths": [
+                "Two-channel signed rate code (2x spike overhead, halves energy gain)",
+                "Surrogate SiLU via shifted ReLU: silu(x) ~ relu(x+0.5) - 0.25 "
+                "(rough, ~8% error at boundary)",
+                "Hybrid: keep SwiGLU gate in ANN, convert up/down to spiking "
+                "(pragmatic, ~60% of expert params converted)",
+                "Temporal correlation coding for element-wise multiply "
+                "(active research, no proven LAS-compatible method yet)",
+            ],
+            "notes": [
+                f"Each expert: {hidden} -> {expert_inter} -> {hidden} (SwiGLU)",
+                f"Only {top_k}/{n_experts} experts active per token",
+                "down_proj (inter -> hidden) is straightforward ReLU conversion",
+                "gate_proj output feeds SiLU -- the conversion bottleneck",
+            ],
+        },
+        "shared_expert": {
+            "convertible": "partial",
+            "method": "Same SwiGLU issues as MoE experts",
+            "params_per_layer": shared_expert_params,
+            "total_params": shared_expert_params * n_layers,
+            "notes": [
+                f"Shared expert: {hidden} -> {shared_inter} -> {hidden}",
+                "Always active (not gated by router)",
+                "Same SwiGLU conversion challenges as regular experts",
+            ],
+        },
+        "embedding_lm_head": {
+            "convertible": False,
+            "method": "N/A (lookup table, not a matmul)",
+            "params": embed_params + lm_head_params,
+            "notes": [
+                "Embedding is a lookup, not amenable to spiking conversion",
+                "lm_head logits need full precision for sampling",
+            ],
+        },
+        "summary": {
+            "total_params_per_layer": total_params_per_layer,
+            "total_model_params_estimate": (
+                total_params_per_layer * n_layers
+                + embed_params + lm_head_params
+            ),
+            "fully_convertible_params": (
+                (attn_params_per_layer + router_params_per_layer) * n_layers
+            ),
+            "partially_convertible_params": (
+                (expert_params_total + shared_expert_params) * n_layers
+            ),
+            "not_convertible_params": embed_params + lm_head_params,
+        },
+    }
+
+
+def calculate_spike_rate_equivalence(
+    config: dict[str, Any],
+    timesteps: int = 128,
+) -> dict[str, Any]:
+    """Calculate theoretical spike rate for attention layers.
+
+    For a rate-coded LIF neuron with threshold = max_rate / T:
+    - An activation `a` produces `floor(a * T / max_rate)` spikes
+    - Reconstruction error bounded by `max_rate / T`
+    - Energy per spike ~ 1 addition (vs 1 MAC for dense matmul)
+
+    Returns spike rate analysis for different layer types.
+    """
+    hidden = config["hidden_size"]
+    n_heads = config["num_attention_heads"]
+    n_kv_heads = config["num_key_value_heads"]
+    head_dim = config["head_dim"]
+    n_experts = config["num_experts"]
+    top_k = config["num_experts_per_tok"]
+    expert_inter = config["moe_intermediate_size"]
+
+    max_rate = 1.0
+    threshold = max_rate / timesteps
+    quant_error = threshold  # max per-element quantisation error
+
+    # Theoretical spike rate for uniformly distributed activations [0, 1]
+    # Mean spike count per neuron per forward = T * mean_activation / max_rate
+    # For uniform [0, 1]: mean_activation = 0.5
+    mean_activation = 0.5
+    mean_spike_count = timesteps * mean_activation / max_rate
+
+    # Attention: Q/K/V/O projections
+    q_neurons = n_heads * head_dim  # 7168
+    kv_neurons = n_kv_heads * head_dim  # 448
+    attn_neurons_per_token = q_neurons + 2 * kv_neurons + hidden
+    attn_spikes_per_token = attn_neurons_per_token * mean_spike_count
+
+    # MoE: only top_k experts active
+    expert_neurons_per_token = top_k * (2 * expert_inter + hidden)  # gate+up+down
+    expert_spikes_per_token = expert_neurons_per_token * mean_spike_count
+
+    # MAC comparison: dense multiply-accumulate ops
+    q_macs = hidden * q_neurons  # matmul
+    k_macs = hidden * kv_neurons
+    v_macs = hidden * kv_neurons
+    o_macs = q_neurons * hidden
+    attn_macs_per_token = q_macs + k_macs + v_macs + o_macs
+
+    expert_macs_per_token = top_k * (
+        hidden * expert_inter  # gate_proj
+        + hidden * expert_inter  # up_proj
+        + expert_inter * hidden  # down_proj
+    )
+
+    return {
+        "timesteps": timesteps,
+        "threshold": threshold,
+        "max_quantisation_error": quant_error,
+        "relative_error_bound": f"O(1/{timesteps}) = {1.0/timesteps:.6f}",
+        "attention": {
+            "neurons_per_token": attn_neurons_per_token,
+            "mean_spikes_per_token": attn_spikes_per_token,
+            "macs_per_token": attn_macs_per_token,
+            "spike_to_mac_ratio": round(
+                attn_spikes_per_token / attn_macs_per_token, 6
+            ),
+        },
+        "moe_ffn_per_token": {
+            "active_experts": top_k,
+            "neurons_per_token": expert_neurons_per_token,
+            "mean_spikes_per_token": expert_spikes_per_token,
+            "macs_per_token": expert_macs_per_token,
+            "spike_to_mac_ratio": round(
+                expert_spikes_per_token / expert_macs_per_token, 6
+            ),
+        },
+        "notes": [
+            "Spike-to-MAC ratio < 1 means fewer spike events than MAC ops",
+            "Each spike = 1 addition; each MAC = 1 multiply + 1 add",
+            "Actual sparsity depends on activation distribution (ReLU helps)",
+            f"With T={timesteps}, quantisation error < {quant_error:.4f} per neuron",
+        ],
+    }
+
+
+def estimate_energy_savings(
+    config: dict[str, Any],
+    timesteps: int = 128,
+) -> dict[str, Any]:
+    """Estimate energy savings from spiking vs multiply-accumulate.
+
+    Energy model (45nm CMOS, Horowitz 2014):
+    - 32-bit float MAC: ~4.6 pJ
+    - 32-bit float ADD: ~0.9 pJ
+    - Spike event (accumulate): ~0.9 pJ (just addition, no multiply)
+
+    For neuromorphic hardware (Loihi 2, SpiNNaker 2):
+    - Spike event: ~0.02-0.1 pJ (much lower than CMOS ADD)
+    """
+    hidden = config["hidden_size"]
+    n_layers = config["num_hidden_layers"]
+    n_heads = config["num_attention_heads"]
+    n_kv_heads = config["num_key_value_heads"]
+    head_dim = config["head_dim"]
+    n_experts = config["num_experts"]
+    top_k = config["num_experts_per_tok"]
+    expert_inter = config["moe_intermediate_size"]
+    shared_inter = config.get("shared_expert_intermediate_size", 0)
+
+    # Energy constants (pJ per operation, 45nm CMOS)
+    E_MAC_32 = 4.6   # 32-bit float multiply-accumulate
+    E_ADD_32 = 0.9   # 32-bit float addition (spike accumulate)
+    E_SPIKE_NEUROMORPHIC = 0.05  # neuromorphic hardware estimate
+
+    # Per-layer MAC counts (attention)
+    q_dim = n_heads * head_dim
+    kv_dim = n_kv_heads * head_dim
+    attn_macs = (
+        hidden * q_dim     # q_proj
+        + hidden * kv_dim  # k_proj
+        + hidden * kv_dim  # v_proj
+        + q_dim * hidden   # o_proj
+    )
+
+    # Per-layer MAC counts (MoE, per token — only top_k active)
+    expert_macs = top_k * (
+        hidden * expert_inter  # gate_proj
+        + hidden * expert_inter  # up_proj
+        + expert_inter * hidden  # down_proj
+    )
+
+    # Shared expert
+    shared_macs = 0
+    if shared_inter > 0:
+        shared_macs = (
+            hidden * shared_inter
+            + hidden * shared_inter
+            + shared_inter * hidden
+        )
+
+    # Router MACs
+    router_macs = hidden * n_experts
+
+    total_macs_per_token_per_layer = (
+        attn_macs + expert_macs + shared_macs + router_macs
+    )
+    total_macs_per_token = total_macs_per_token_per_layer * n_layers
+
+    # Spike counts (assuming mean activation 0.5, max_rate 1.0)
+    mean_spike_rate = 0.5  # fraction of timesteps that spike
+    mean_spikes_per_neuron = timesteps * mean_spike_rate
+
+    # Attention spike ops (each spike = 1 ADD to downstream neuron)
+    # Number of downstream connections = out_features
+    attn_spike_ops = (q_dim + kv_dim + kv_dim + hidden) * mean_spikes_per_neuron
+
+    # Expert spike ops (only top_k active)
+    expert_spike_ops = top_k * (
+        expert_inter + expert_inter + hidden
+    ) * mean_spikes_per_neuron
+
+    total_spike_ops_per_layer = attn_spike_ops + expert_spike_ops
+    total_spike_ops_per_token = total_spike_ops_per_layer * n_layers
+
+    # Energy calculations
+    ann_energy_per_token = total_macs_per_token * E_MAC_32  # pJ
+    snn_energy_cmos = total_spike_ops_per_token * E_ADD_32  # pJ
+    snn_energy_neuromorphic = total_spike_ops_per_token * E_SPIKE_NEUROMORPHIC
+
+    return {
+        "energy_model": {
+            "mac_32bit_pJ": E_MAC_32,
+            "add_32bit_pJ": E_ADD_32,
+            "spike_neuromorphic_pJ": E_SPIKE_NEUROMORPHIC,
+            "source": "Horowitz 2014 (45nm CMOS)",
+        },
+        "per_token_per_layer": {
+            "ann_macs": total_macs_per_token_per_layer,
+            "snn_spike_ops": int(total_spike_ops_per_layer),
+        },
+        "per_token_full_model": {
+            "ann_macs": total_macs_per_token,
+            "ann_energy_pJ": round(ann_energy_per_token, 1),
+            "ann_energy_uJ": round(ann_energy_per_token / 1e6, 3),
+            "snn_spike_ops": int(total_spike_ops_per_token),
+            "snn_energy_cmos_pJ": round(snn_energy_cmos, 1),
+            "snn_energy_cmos_uJ": round(snn_energy_cmos / 1e6, 3),
+            "snn_energy_neuromorphic_pJ": round(snn_energy_neuromorphic, 1),
+            "snn_energy_neuromorphic_uJ": round(snn_energy_neuromorphic / 1e6, 3),
+        },
+        "savings": {
+            "cmos_ratio": round(ann_energy_per_token / snn_energy_cmos, 2)
+            if snn_energy_cmos > 0 else float("inf"),
+            "neuromorphic_ratio": round(
+                ann_energy_per_token / snn_energy_neuromorphic, 2
+            ) if snn_energy_neuromorphic > 0 else float("inf"),
+            "cmos_saving_percent": round(
+                (1 - snn_energy_cmos / ann_energy_per_token) * 100, 1
+            ) if ann_energy_per_token > 0 else 0,
+            "neuromorphic_saving_percent": round(
+                (1 - snn_energy_neuromorphic / ann_energy_per_token) * 100, 1
+            ) if ann_energy_per_token > 0 else 0,
+        },
+        "caveats": [
+            "Energy model assumes 45nm CMOS; modern 5nm would scale all values",
+            "Spike ops count assumes mean activation 0.5 (uniform distribution)",
+            "Real activation sparsity (post-ReLU) would reduce spike count",
+            "SwiGLU gate path not fully convertible — hybrid energy mix",
+            "Does not include memory access energy (often dominant)",
+            f"T={timesteps} timesteps means {timesteps}x temporal overhead",
+            "Neuromorphic estimate assumes dedicated hardware (Loihi 2 class)",
+        ],
+    }
+
+
+def run_analysis(
+    config_path: Path | None = None,
+    timesteps: int = 128,
+    results_out: Path | None = None,
+) -> dict[str, Any]:
+    """Run the full story-27 theoretical analysis.
+
+    No weights, no GPU, no torch required.
+    """
+    config = load_model_config(config_path)
+    log.info("loaded config for %s", config.get("_name_or_path", "unknown"))
+
+    convertibility = analyze_layer_convertibility(config)
+    spike_rates = calculate_spike_rate_equivalence(config, timesteps)
+    energy = estimate_energy_savings(config, timesteps)
+
+    # Summary statistics
+    summary = convertibility["summary"]
+    total = summary["total_model_params_estimate"]
+    fully = summary["fully_convertible_params"]
+    partial = summary["partially_convertible_params"]
+    not_conv = summary["not_convertible_params"]
+
+    results = {
+        "story": "story-27",
+        "title": "LAS convert Qwen3.5-35B-A3B -> SpikingKiki-35B (MoE)",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "model": {
+            "name": config.get("_name_or_path", "Qwen3.5-35B-A3B"),
+            "architecture": config.get("architectures", ["unknown"])[0]
+            if isinstance(config.get("architectures"), list)
+            else "unknown",
+            "hidden_size": config["hidden_size"],
+            "num_layers": config["num_hidden_layers"],
+            "num_experts": config["num_experts"],
+            "active_experts_per_token": config["num_experts_per_tok"],
+            "total_params_estimate": total,
+            "active_params_estimate": config.get("active_params_billions", 3.0),
+        },
+        "convertibility": convertibility,
+        "spike_rate_equivalence": spike_rates,
+        "energy_savings": energy,
+        "conversion_summary": {
+            "fully_convertible_percent": round(fully / total * 100, 1),
+            "partially_convertible_percent": round(partial / total * 100, 1),
+            "not_convertible_percent": round(not_conv / total * 100, 1),
+            "fully_convertible_params": fully,
+            "partially_convertible_params": partial,
+            "not_convertible_params": not_conv,
+            "verdict": (
+                "Attention layers (GQA projections) and MoE routers are fully "
+                "convertible via LAS with identity activation. MoE expert FFNs "
+                "are partially convertible: down_proj is straightforward, but "
+                "SwiGLU gate (SiLU activation + element-wise multiply) has no "
+                "direct spiking equivalent. Recommended approach: hybrid "
+                "conversion keeping SwiGLU gate in ANN domain, converting "
+                "up/down projections to spiking. This yields ~60% expert "
+                "parameter conversion with predictable energy savings."
+            ),
+        },
+        "research_questions": [
+            {
+                "id": "RQ1",
+                "question": "Can SiLU be approximated by shifted ReLU in rate code?",
+                "status": "open",
+                "priority": "high",
+                "notes": "silu(x) ~ relu(x+0.5) - 0.25 gives ~8% boundary error",
+            },
+            {
+                "id": "RQ2",
+                "question": "Does two-channel signed encoding preserve MoE quality?",
+                "status": "open",
+                "priority": "high",
+                "notes": "2x spike overhead; needs empirical validation on MoE",
+            },
+            {
+                "id": "RQ3",
+                "question": "What is the minimum T for <1% attention error at 35B scale?",
+                "status": "testable",
+                "priority": "medium",
+                "notes": f"Theory: T=128 gives error bound {1/128:.4f}; "
+                         "empirical validation needs weight samples",
+            },
+            {
+                "id": "RQ4",
+                "question": "Can temporal correlation coding handle element-wise multiply?",
+                "status": "open",
+                "priority": "low",
+                "notes": "Active research area; no proven LAS-compatible method",
+            },
+        ],
+    }
+
+    out_path = results_out or (RESULTS_DIR / "spikingkiki-35b-analysis.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(results, indent=2) + "\n")
+    log.info("analysis written to %s", out_path)
+
+    return results
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "LAS conversion: Qwen3.5-35B-A3B MoE → SpikingKiki-35B-A3B"
+        )
+    )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=Path(
+            "/Volumes/studio/models/Qwen3.5-35B-A3B"
+        ),
+        help="Path to the HuggingFace model directory.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path(
+            "/Volumes/studio/models/SpikingKiki-35B-A3B"
+        ),
+        help="Output directory for converted spiking layers.",
+    )
+    parser.add_argument(
+        "--timesteps",
+        type=int,
+        default=128,
+        help="LIF integration timesteps T (default 128).",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip layers already saved to --output.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Generate layer map and metadata without loading weights.",
+    )
+    parser.add_argument(
+        "--results-out",
+        type=Path,
+        default=RESULTS_DIR / "spikingkiki-35b-convert.json",
+        help="Path for the conversion metadata JSON.",
+    )
+    parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="Run theoretical analysis only (story-27). No weights/GPU needed.",
+    )
+    parser.add_argument(
+        "--config",
+        "--config-path",
+        dest="config",
+        type=Path,
+        default=CONFIG_PATH,
+        help=(
+            "Path to model config.json (default: bundled Qwen3.5 config). "
+            "Supports both flat and nested text_config layouts "
+            "(e.g. Qwen3.6-35B-A3B)."
+        ),
+    )
+    parser.add_argument(
+        "--start-block",
+        type=int,
+        default=0,
+        help="Start conversion at this block index (for parallel runs).",
+    )
+    parser.add_argument(
+        "--end-block",
+        type=int,
+        default=None,
+        help="End conversion BEFORE this block index (exclusive).",
+    )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    logging.getLogger().setLevel(args.log_level)
+
+    t_start = time.monotonic()
+
+    # --- Analyze mode (story-27: theoretical analysis, no weights) ---
+    if args.analyze:
+        log.info("running theoretical analysis (story-27) — no weights needed")
+        results = run_analysis(
+            config_path=args.config,
+            timesteps=args.timesteps,
+            results_out=RESULTS_DIR / "spikingkiki-35b-analysis.json",
+        )
+        summary = results["conversion_summary"]
+        log.info(
+            "fully convertible: %.1f%%, partial: %.1f%%, not: %.1f%%",
+            summary["fully_convertible_percent"],
+            summary["partially_convertible_percent"],
+            summary["not_convertible_percent"],
+        )
+        savings = results["energy_savings"]["savings"]
+        log.info(
+            "energy savings — CMOS: %.1f%%, neuromorphic: %.1f%%",
+            savings["cmos_saving_percent"],
+            savings["neuromorphic_saving_percent"],
+        )
+        return 0
+
+    log.info(
+        "SpikingKiki-35B conversion — timesteps=%d resume=%s dry_run=%s",
+        args.timesteps,
+        args.resume,
+        args.dry_run,
+    )
+
+    # If a config is provided (or the default exists), honour its
+    # layer/expert counts so dry-run reports match the target model.
+    cfg_num_layers = NUM_LAYERS
+    cfg_num_experts = NUM_EXPERTS
+    cfg_layer_types: list[str] | None = None
+    try:
+        cfg = load_model_config(args.config)
+        cfg_num_layers = int(cfg.get("num_hidden_layers", NUM_LAYERS))
+        cfg_num_experts = int(cfg.get("num_experts", NUM_EXPERTS))
+        lt = cfg.get("layer_types")
+        if isinstance(lt, list) and lt:
+            cfg_layer_types = [str(x) for x in lt]
+    except Exception as exc:  # pragma: no cover — analysis is best-effort
+        log.debug("could not read config %s: %s", args.config, exc)
+
+    layer_map = build_layer_map(
+        num_layers=cfg_num_layers,
+        num_experts=cfg_num_experts,
+        layer_types=cfg_layer_types,
+    )
+    map_stats = layer_map_stats(layer_map)
+    log.info(
+        "layer map: %d total (%s)",
+        map_stats["total"],
+        ", ".join(f"{k}={v}" for k, v in map_stats.items() if k != "total"),
+    )
+
+    spike_stats: dict[str, Any] = {}
+
+    # --- Dry-run path (no torch needed) ---
+    if args.dry_run:
+        log.info("dry-run: skipping weight loading")
+        meta = build_metadata(
+            args, layer_map, spike_stats,
+            elapsed_s=time.monotonic() - t_start,
+            status="dry_run",
+        )
+        meta["layer_map"] = layer_map
+        args.results_out.parent.mkdir(parents=True, exist_ok=True)
+        args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+        log.info("metadata written to %s", args.results_out)
+        return 0
+
+    # --- Check model directory ---
+    if not args.input.exists():
+        log.error("model directory not found: %s", args.input)
+        meta = build_metadata(
+            args, layer_map, spike_stats,
+            elapsed_s=time.monotonic() - t_start,
+            status="no_weights",
+        )
+        args.results_out.parent.mkdir(parents=True, exist_ok=True)
+        args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+        return 2
+
+    # --- Import torch (guarded) ---
+    torch = _try_import_torch()
+    if torch is None:
+        log.error("torch not available — cannot load model weights")
+        meta = build_metadata(
+            args, layer_map, spike_stats,
+            elapsed_s=time.monotonic() - t_start,
+            status="torch_missing",
+        )
+        args.results_out.parent.mkdir(parents=True, exist_ok=True)
+        args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+        return 3
+
+    AutoModelForCausalLM, AutoConfig = _try_import_transformers()
+    if AutoModelForCausalLM is None:
+        log.error("transformers not available")
+        meta = build_metadata(
+            args, layer_map, spike_stats,
+            elapsed_s=time.monotonic() - t_start,
+            status="transformers_missing",
+        )
+        args.results_out.parent.mkdir(parents=True, exist_ok=True)
+        args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+        return 3
+
+    # --- Resume state ---
+    converted_keys: set[str] = set()
+    if args.resume:
+        converted_keys = load_resume_state(args.output)
+        log.info("resume: %d layers already converted", len(converted_keys))
+
+    # --- Load model ---
+    log.info("loading model from %s (bfloat16, cpu map) …", args.input)
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            str(args.input),
+            torch_dtype=torch.bfloat16,
+            device_map="cpu",
+            trust_remote_code=True,
+        )
+        model.eval()
+    except Exception as exc:
+        log.error("model load failed: %s: %s", type(exc).__name__, exc)
+        meta = build_metadata(
+            args, layer_map, spike_stats,
+            elapsed_s=time.monotonic() - t_start,
+            status="load_failed",
+        )
+        meta["error"] = str(exc)
+        args.results_out.parent.mkdir(parents=True, exist_ok=True)
+        args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+        return 4
+
+    # --- LASConverter ---
+    from src.spiking.las_converter import LASConverter
+    converter = LASConverter(timesteps=args.timesteps, max_rate=1.0)
+
+    args.output.mkdir(parents=True, exist_ok=True)
+
+    # --- Layer-by-layer conversion ---
+    n_total = cfg_num_layers
+    start_blk = max(0, args.start_block)
+    end_blk = args.end_block if args.end_block is not None else n_total
+    end_blk = min(end_blk, n_total)
+    log.info("block range: [%d, %d)", start_blk, end_blk)
+    for layer_idx in range(start_blk, end_blk):
+        t_layer = time.monotonic()
+        log.info(
+            "[%d/%d] converting block %d …", layer_idx + 1, n_total, layer_idx
+        )
+
+        try:
+            block_stats = convert_block_torch(
+                model=model,
+                layer_idx=layer_idx,
+                converter=converter,
+                spike_stats=spike_stats,
+                converted_keys=converted_keys,
+                output_dir=args.output,
+                timesteps=args.timesteps,
+                layer_types=cfg_layer_types,
+            )
+        except Exception as exc:
+            log.error(
+                "block %d conversion failed: %s: %s",
+                layer_idx, type(exc).__name__, exc,
+            )
+            spike_stats[f"layer_{layer_idx}"] = {
+                "status": "failed",
+                "error": str(exc),
+            }
+            # Save resume state so we can skip completed layers on retry
+            save_resume_state(args.output, converted_keys)
+            continue
+
+        spike_stats[f"layer_{layer_idx}"] = block_stats
+        elapsed_block = time.monotonic() - t_layer
+        log.info(
+            "  block %d done in %.1fs (%d keys converted so far)",
+            layer_idx,
+            elapsed_block,
+            len(converted_keys),
+        )
+
+        # Periodic resume state flush (every 5 blocks)
+        if layer_idx % 5 == 0:
+            save_resume_state(args.output, converted_keys)
+            log.debug("resume state flushed (%d keys)", len(converted_keys))
+
+    save_resume_state(args.output, converted_keys)
+
+    # Mark converted layers in the layer map
+    for entry in layer_map:
+        entry["converted"] = entry["key_prefix"] in converted_keys
+
+    elapsed_total = time.monotonic() - t_start
+    log.info("conversion complete in %.1fs", elapsed_total)
+
+    meta = build_metadata(
+        args, layer_map, spike_stats,
+        elapsed_s=elapsed_total,
+        status="ok",
+    )
+    args.results_out.parent.mkdir(parents=True, exist_ok=True)
+    args.results_out.write_text(json.dumps(meta, indent=2) + "\n")
+    log.info("metadata written to %s", args.results_out)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

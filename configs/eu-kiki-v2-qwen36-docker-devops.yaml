@@ -1,0 +1,22 @@
+model: /Users/clems/KIKI-Mac_tunner/models/Qwen3.6-35B-A3B-MLX-BF16
+data: /Users/clems/eu-kiki/data/hf-traced/docker-devops
+train: true
+fine_tune_type: lora
+optimizer: adamw
+num_layers: 16
+lora_parameters:
+  rank: 32
+  scale: 2.0
+  dropout: 0.05
+batch_size: 1
+iters: 500
+val_batches: 5
+learning_rate: 1e-5
+steps_per_report: 10
+steps_per_eval: 200
+save_every: 200
+grad_accumulation_steps: 4
+max_seq_length: 2048
+grad_checkpoint: true
+adapter_path: /Users/clems/KIKI-Mac_tunner/output/eu-kiki-v2/qwen36-docker-devops
+seed: 42

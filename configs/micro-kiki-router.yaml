@@ -1,0 +1,57 @@
+# Meta-router training configuration for 32-domain Brainstacks
+# Plan 3: Sigmoid meta-router on frozen Qwen3.5-4B + 32 MoE-LoRA stacks
+
+model:
+  base_model_path: "models/Qwen3.5-4B"
+  stacks_dir: "output/micro-kiki/stacks"
+  router_dir: "output/micro-kiki/router"
+  h_dim: 3072
+  router_hidden_dim: 512
+  num_domains: 32
+
+hidden_extraction:
+  mid_layer_weight: 0.45
+  last_layer_weight: 0.55
+  pool_fn: "last_token"
+  # Mid layer index computed as num_layers // 2 at runtime
+
+router:
+  hidden_dim: 512
+  dropout: 0.1
+  temperature_init: 2.0
+  gate_threshold: 0.12
+  max_active: 4
+  chat_floor: 0.20
+
+training:
+  num_epochs: 8
+  batch_size: 16
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  lr_scheduler: "cosine"
+  gradient_clip: 1.0
+  margin_weight: 0.1
+  val_ratio: 0.1
+  seed: 42
+
+loss:
+  type: "bce"
+  margin_penalty_weight: 0.1
+
+outcome_discovery:
+  loss_improvement_threshold: 0.01
+  discovery_weight: 0.80
+  prior_weight: 0.20
+  max_prompts: 5000
+  cache_dir: "output/micro-kiki/discovery_cache"
+
+inference:
+  gate_threshold: 0.12
+  chat_floor: 0.20
+  max_active_stacks: 4
+  lru_cache_size: 6
+
+data:
+  mixed_dataset_path: "data/micro-kiki/mixed"
+  discovery_targets_path: "output/micro-kiki/router_targets.safetensors"

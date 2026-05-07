@@ -7,11 +7,13 @@ Fine-tune large language models on Apple Silicon using the full unified memory �
 Distills Claude Opus reasoning into open-source LLMs (Mistral Large 123B, Qwen3.5-122B-A10B, Devstral 2 123B) using MLX on a single Mac Studio. BF16 full-precision training with LoRA, enabled by 512 GB unified memory.
 
 Includes:
+- **EU-KIKI v2** — 3-phase curriculum training (seq 512→1280→4096) on Qwen3.6-35B-A3B (31 domains) + Mistral Medium 3.5 128B (33 domains)
 - **Brainstacks** — 32-expert MoE-LoRA fleet on Qwen3.5 with null-space projection (zero-forgetting continual learning)
-- **eu-kiki** — EU-sovereign training stack (Apertus 70B / Devstral 2 24B / EuroLLM 22B) with EU AI Act-compliant dataset provenance
+- **eu-kiki v1** — EU-sovereign training stack (Apertus 70B / Devstral 2 24B / EuroLLM 22B) with EU AI Act-compliant dataset provenance
 - **SpikingKiki** — LoRA → spiking neural network conversion track (LAS rate-coded)
 - **ANE hybrid pipeline** — DeltaNet on Apple Neural Engine for hybrid inference
 - **Meta-router** — 32-domain attention-pooling router for stack dispatch
+- **VLM support** — mlx-vlm for vision-language model training and inference on Apple Silicon
 
 ## Machine
 
@@ -74,7 +76,21 @@ Peak memory for 122B training: 383 GB (failed to allocate beyond).
 
 > ⚠️ **Suite non lancée** : Q4 quantization, smoke test (`smoke_spikingbrain.py`), energy bench ANN vs SNN — aucun log post-conversion.
 
-### eu-kiki training (sister project)
+### EU-KIKI v2 — curriculum training (active)
+
+3-phase curriculum: seq 512→1280→4096, LR 8e-6→5e-6→3e-6. Resume-safe (skips completed phases).
+
+| Model | Domains | LoRA config | Phase 3 seq | Status (2026-05-07) |
+|-------|---------|-------------|-------------|---------------------|
+| Qwen3.6-35B-A3B BF16 | 31 | r32/α32, 16 layers | 4096 | **2/31 complete**, 4 partial, 25 not started (~30h remaining) |
+| Mistral Medium 3.5 128B BF16 | 33 | r16/α32, all layers | 2048 | **0/33** — starts after Qwen36 completes |
+
+Scripts: `train_eu_kiki_v2_curriculum.sh` (3-phase), `train_eu_kiki_v2_batch.sh` (flat).
+Configs: `configs/eu-kiki-v2-qwen36-*.yaml` (per-domain probes).
+Output: `output/eu-kiki-v2-curriculum/{qwen36,medium35}-<domain>/`.
+Data: `~/eu-kiki/data/hf-traced/` (36 domains).
+
+### eu-kiki v1 training (sister project)
 
 | Model | Adapters trained | Total target | Status |
 |-------|------------------|--------------|--------|
@@ -83,7 +99,6 @@ Peak memory for 122B training: 383 GB (failed to allocate beyond).
 | EuroLLM 22B | 3 (chat-fr, multilingual-eu, traduction-tech) | 4 | **PARTIAL** |
 | Router 32-domain | trained | — | **DONE** (`~/eu-kiki/output/router/router.safetensors`) |
 | Eval framework | code prêt (52 ko, EU AI Act Art. 53(1)(d)) | — | **JAMAIS LANCÉ** — `output/eval/raw/` vide |
-| Batch v2 medium-35 (Mistral-Medium-3.5-128B) | math-gsm8k done, math-reasoning iter 400 val 0.511 | 4+ | **EN COURS** |
 
 ### HuggingFace publications
 
@@ -277,6 +292,9 @@ Pas de Makefile ni CI. 3 wrappers shell :
 
 | Model | Size | Location |
 |-------|------|----------|
+| Qwen3.6-35B-A3B-MLX-BF16 | ~65 GB | `models/` |
+| Mistral-Medium-3.5-128B-BF16 | ~240 GB | `models/` |
+| Mistral-Medium-3.5-128B-MLX-Q8 | ~130 GB | `models/` |
 | Qwen3.5-122B-A10B-BF16 | 233 GB | `models/` |
 | Qwen3.5-35B-A3B-Opus-bf16 | 65 GB | `models/` |
 | Qwen3.5-35B-A3B-Opus-vlm | — | fusion model (vision tower) |
@@ -331,7 +349,7 @@ KIKI-Mac_tunner/
 - [MLX](https://github.com/ml-explore/mlx) (custom fork at `/tmp/mlx-fork` with 3× Metal buffer limit)
 - [mlx-lm](https://github.com/ml-explore/mlx-lm) (with vendored `lib/mlx_lm_fork/` for SSD offload)
 - [mlx-tune](https://github.com/ml-explore/mlx-tune) ≥ 0.4.21
-- [mlx-vlm](https://github.com/Blaizzy/mlx-vlm)
+- [mlx-vlm](https://github.com/Blaizzy/mlx-vlm) 0.4.4 — vision-language model training and inference on Apple Silicon
 
 ## License
 

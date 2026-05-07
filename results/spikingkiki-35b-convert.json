@@ -1,0 +1,1224 @@
+{
+  "timestamp": "2026-04-22T00:24:46Z",
+  "status": "ok",
+  "input": "models/Qwen3.6-35B-A3B",
+  "output": "models/SpikingKiki-35B-A3B-V4",
+  "timesteps": 128,
+  "model_info": {
+    "name": "Qwen3.5-35B-A3B",
+    "num_layers": 94,
+    "num_experts": 256,
+    "top_k": 8,
+    "hidden_dim": 7168,
+    "expert_intermediate_dim": 2048
+  },
+  "layer_map_stats": {
+    "linear_attn_proj": 150,
+    "linear_attn_passthrough": 120,
+    "moe_router": 40,
+    "moe_expert_ffn": 30720,
+    "attn_proj": 40,
+    "total": 31070
+  },
+  "converted_layers": 31070,
+  "total_layers": 31070,
+  "elapsed_s": 11086.0,
+  "spike_stats": {
+    "layer_0": {
+      "layer_id": 0,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_1": {
+      "layer_id": 1,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1387
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1582
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2773
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.293
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6094
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 0.9791
+    },
+    "layer_2": {
+      "layer_id": 2,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1787
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1533
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2656
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.291
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.668
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0168
+    },
+    "layer_3": {
+      "layer_id": 3,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3418
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.1885
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.1523
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.5859
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0228
+    },
+    "layer_4": {
+      "layer_id": 4,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1562
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1973
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2734
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.2773
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7383
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.033
+    },
+    "layer_5": {
+      "layer_id": 5,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1484
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1514
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3281
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.2871
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7461
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0375
+    },
+    "layer_6": {
+      "layer_id": 6,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.165
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.167
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3887
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.2734
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6602
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0368
+    },
+    "layer_7": {
+      "layer_id": 7,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2949
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.3105
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.1768
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6211
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0354
+    },
+    "layer_8": {
+      "layer_id": 8,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1846
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1494
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3047
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3516
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6406
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0321
+    },
+    "layer_9": {
+      "layer_id": 9,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.2012
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.168
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2852
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.2695
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7188
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0441
+    },
+    "layer_10": {
+      "layer_id": 10,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.2266
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1523
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.252
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3047
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.8281
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0538
+    },
+    "layer_11": {
+      "layer_id": 11,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2559
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.21
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.168
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6367
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0533
+    },
+    "layer_12": {
+      "layer_id": 12,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1904
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1709
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2812
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.2402
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7383
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0469
+    },
+    "layer_13": {
+      "layer_id": 13,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1875
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1436
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4297
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3398
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7812
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0481
+    },
+    "layer_14": {
+      "layer_id": 14,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1748
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.166
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3828
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3203
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.707
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0537
+    },
+    "layer_15": {
+      "layer_id": 15,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.2539
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2021
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2178
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.707
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0553
+    },
+    "layer_16": {
+      "layer_id": 16,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1533
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1279
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4043
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.25
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7422
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0577
+    },
+    "layer_17": {
+      "layer_id": 17,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1699
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1631
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3223
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3066
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.75
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0591
+    },
+    "layer_18": {
+      "layer_id": 18,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1602
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.126
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3301
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3125
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6602
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0633
+    },
+    "layer_19": {
+      "layer_id": 19,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3965
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2168
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2236
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6719
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0659
+    },
+    "layer_20": {
+      "layer_id": 20,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.2041
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1445
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4102
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3262
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7852
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0563
+    },
+    "layer_21": {
+      "layer_id": 21,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1748
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1709
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.5156
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3555
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.8633
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0612
+    },
+    "layer_22": {
+      "layer_id": 22,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.167
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1445
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3301
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3652
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.9297
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0724
+    },
+    "layer_23": {
+      "layer_id": 23,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4102
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2344
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2363
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6953
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0748
+    },
+    "layer_24": {
+      "layer_id": 24,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1953
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1885
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3555
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3125
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.8047
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0741
+    },
+    "layer_25": {
+      "layer_id": 25,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.2119
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1455
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.3105
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3105
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.8945
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0774
+    },
+    "layer_26": {
+      "layer_id": 26,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1865
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.165
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4766
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3555
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6797
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0855
+    },
+    "layer_27": {
+      "layer_id": 27,
+      "layer_type": "full_attention",
+      "projections": {
+        "q_proj": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.334
+        },
+        "k_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2324
+        },
+        "v_proj": {
+          "in": 2048,
+          "out": 512,
+          "w_abs_max": 0.2559
+        },
+        "o_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.6602
+        }
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0926
+    },
+    "layer_28": {
+      "layer_id": 28,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.208
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1494
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.5664
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3848
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.7695
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0981
+    },
+    "layer_29": {
+      "layer_id": 29,
+      "layer_type": "linear_attention",
+      "projections": {
+        "linear_attn.in_proj_a": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1514
+        },
+        "linear_attn.in_proj_b": {
+          "in": 2048,
+          "out": 32,
+          "w_abs_max": 0.1377
+        },
+        "linear_attn.in_proj_qkv": {
+          "in": 2048,
+          "out": 8192,
+          "w_abs_max": 0.4336
+        },
+        "linear_attn.in_proj_z": {
+          "in": 2048,
+          "out": 4096,
+          "w_abs_max": 0.3301
+        },
+        "linear_attn.out_proj": {
+          "in": 4096,
+          "out": 2048,
+          "w_abs_max": 0.8398
+        }
+      },
+      "linear_attn_passthrough": {
+        "A_log": "copied",
+        "conv1d": "copied",
+        "dt_bias": "copied",
+        "norm": "copied"
+      },
+      "router": {
+        "in": 2048,
+        "out": 256
+      },
+      "expert_spike_rate_mean": 1.0997
+    },
+    "layer_30": {
+      "layer_id": 30,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_31": {
+      "layer_id": 31,
+      "layer_type": "full_attention",
+      "projections": {}
+    },
+    "layer_32": {
+      "layer_id": 32,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_33": {
+      "layer_id": 33,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_34": {
+      "layer_id": 34,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_35": {
+      "layer_id": 35,
+      "layer_type": "full_attention",
+      "projections": {}
+    },
+    "layer_36": {
+      "layer_id": 36,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_37": {
+      "layer_id": 37,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_38": {
+      "layer_id": 38,
+      "layer_type": "linear_attention",
+      "projections": {}
+    },
+    "layer_39": {
+      "layer_id": 39,
+      "layer_type": "full_attention",
+      "projections": {}
+    }
+  }
+}

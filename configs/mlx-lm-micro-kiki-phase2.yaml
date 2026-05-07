@@ -1,0 +1,26 @@
+# micro-kiki stack-01 chat-fr — Phase 2: medium (seq=1280)
+# Brainstacks done — batch=2 safe now
+model: models/Qwen3.5-35B-A3B-Opus-bf16
+data: data/micro-kiki/chat-fr
+train: true
+fine_tune_type: lora
+optimizer: adamw
+num_layers: -1
+lora_parameters:
+  rank: 64
+  scale: 64.0
+  dropout: 0.01
+batch_size: 2
+iters: 1000
+val_batches: 5
+learning_rate: 5e-6
+steps_per_report: 10
+steps_per_eval: 200
+save_every: 200
+grad_accumulation_steps: 8
+max_seq_length: 1280
+grad_checkpoint: true
+clear_cache_threshold: 4
+adapter_path: output/micro-kiki/stack-01-chat-fr
+resume: true
+seed: 42
