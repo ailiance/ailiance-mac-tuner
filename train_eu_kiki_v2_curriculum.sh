@@ -25,21 +25,23 @@ QWEN_DOMAINS=(
   llm-ops llm-orch lua-upy math-gsm8k math-reasoning
   ml-training multilingual-eu music-audio platformio
   rust rust-embedded security-fenrir shell spice-sim
-  sql stm32 traduction-tech typescript web-backend
+  sql traduction-tech typescript web-backend
   web-frontend yaml-json
 )
+# Removed: stm32 (no train.jsonl)
 
 # ---- Medium 3.5 128B config ----
 MEDIUM_MODEL="${TUNNER_DIR}/models/Mistral-Medium-3.5-128B-BF16"
 MEDIUM_DOMAINS=(
-  chat-fr cpp docker-devops electronics embedded
+  chat-fr cpp docker-devops embedded
   emc-dsp-power freecad html-css iot kicad-dsl
   kicad-pcb llm-ops llm-orch lua-upy math-gsm8k
   math-reasoning ml-training multilingual-eu music-audio
   platformio python rust rust-embedded security-fenrir
-  shell spice-sim sql stm32 traduction-tech
+  shell spice-sim sql traduction-tech
   typescript web-backend web-frontend yaml-json
 )
+# Removed: electronics, stm32 (no train.jsonl)
 
 train_curriculum() {
   local model="$1"
@@ -65,6 +67,24 @@ train_curriculum() {
     return 0
   fi
 
+  # Adaptive iters/dropout based on dataset size
+  local n_examples
+  n_examples=$(wc -l < "${DATA_DIR}/${domain}/train.jsonl")
+  local p1_iters=500 p2_iters=800 p3_iters=500 dropout=0.01
+
+  if [[ $n_examples -lt 100 ]]; then
+    p1_iters=100; p2_iters=150; p3_iters=80; dropout=0.08
+    echo "[WARN] ${prefix}-${domain} — tiny dataset (${n_examples} examples), reduced iters ${p1_iters}/${p2_iters}/${p3_iters}, dropout=${dropout}"
+  elif [[ $n_examples -lt 500 ]]; then
+    p1_iters=200; p2_iters=300; p3_iters=150; dropout=0.05
+    echo "[WARN] ${prefix}-${domain} — small dataset (${n_examples} examples), reduced iters ${p1_iters}/${p2_iters}/${p3_iters}, dropout=${dropout}"
+  elif [[ $n_examples -lt 1000 ]]; then
+    p1_iters=300; p2_iters=500; p3_iters=250; dropout=0.03
+    echo "[INFO] ${prefix}-${domain} — moderate dataset (${n_examples} examples), adjusted iters ${p1_iters}/${p2_iters}/${p3_iters}, dropout=${dropout}"
+  else
+    echo "[INFO] ${prefix}-${domain} — full dataset (${n_examples} examples), standard iters"
+  fi
+
   mkdir -p "$adapter_dir"
 
   echo "============================================="
@@ -73,19 +93,19 @@ train_curriculum() {
 
   # ---- Phase 1: foundations (seq=512) ----
   if [[ ! -f "${adapter_dir}/phase1_done" ]]; then
-    echo "[Phase 1] seq=512, lr=8e-6, iters=500 — $(date)"
+    echo "[Phase 1] seq=512, lr=8e-6, iters=${p1_iters}, dropout=${dropout} — $(date)"
 
     cat > "${adapter_dir}/config-phase1.yaml" <<YAML
 model: ${model}
 train: true
 fine_tune_type: lora
 batch_size: 1
-iters: 500
+iters: ${p1_iters}
 learning_rate: 8.0e-06
 lora_parameters:
   rank: ${rank}
   alpha: ${alpha}
-  dropout: 0.01
+  dropout: ${dropout}
   scale: ${alpha}.0
 num_layers: ${num_layers}
 max_seq_length: 512
@@ -116,19 +136,19 @@ YAML
 
   # ---- Phase 2: medium context (seq=1280) ----
   if [[ ! -f "${adapter_dir}/phase2_done" ]]; then
-    echo "[Phase 2] seq=1280, lr=5e-6, iters=800 — $(date)"
+    echo "[Phase 2] seq=1280, lr=5e-6, iters=${p2_iters}, dropout=${dropout} — $(date)"
 
     cat > "${adapter_dir}/config-phase2.yaml" <<YAML
 model: ${model}
 train: true
 fine_tune_type: lora
 batch_size: 2
-iters: 800
+iters: ${p2_iters}
 learning_rate: 5.0e-06
 lora_parameters:
   rank: ${rank}
   alpha: ${alpha}
-  dropout: 0.01
+  dropout: ${dropout}
   scale: ${alpha}.0
 num_layers: ${num_layers}
 max_seq_length: 1280
@@ -160,19 +180,19 @@ YAML
 
   # ---- Phase 3: full context ----
   if [[ ! -f "${adapter_dir}/phase3_done" ]]; then
-    echo "[Phase 3] seq=${max_seq_phase3}, lr=3e-6, iters=500 — $(date)"
+    echo "[Phase 3] seq=${max_seq_phase3}, lr=3e-6, iters=${p3_iters}, dropout=${dropout} — $(date)"
 
     cat > "${adapter_dir}/config-phase3.yaml" <<YAML
 model: ${model}
 train: true
 fine_tune_type: lora
 batch_size: 2
-iters: 500
+iters: ${p3_iters}
 learning_rate: 3.0e-06
 lora_parameters:
   rank: ${rank}
   alpha: ${alpha}
-  dropout: 0.01
+  dropout: ${dropout}
   scale: ${alpha}.0
 num_layers: ${num_layers}
 max_seq_length: ${max_seq_phase3}
