@@ -85,10 +85,23 @@ Peak memory for 122B training: 383 GB (failed to allocate beyond).
 | Qwen3.6-35B-A3B BF16 | 31 | r32/α32, 16 layers | 4096 | **2/31 complete**, 4 partial, 25 not started (~30h remaining) |
 | Mistral Medium 3.5 128B BF16 | 33 | r16/α32, all layers | 2048 | **0/33** — starts after Qwen36 completes |
 
-Scripts: `train_eu_kiki_v2_curriculum.sh` (3-phase), `train_eu_kiki_v2_batch.sh` (flat).
+Scripts: `train_eu_kiki_v2_curriculum.sh` (3-phase), `train_eu_kiki_v2_batch.sh` (flat), `train_eu_kiki_v2_retry_failed.sh` (Metal-crash recovery, batch=1).
 Configs: `configs/eu-kiki-v2-qwen36-*.yaml` (per-domain probes).
 Output: `output/eu-kiki-v2-curriculum/{qwen36,medium35}-<domain>/`.
 Data: `~/eu-kiki/data/hf-traced/` (36 domains).
+
+#### Adaptive curriculum (iters / dropout vs dataset size)
+
+Detected at start of each domain by counting `train.jsonl` lines. Anti-overfit on small domains, full schedule on large ones.
+
+| Dataset size | Phase 1 iters | Phase 2 iters | Phase 3 iters | Dropout |
+|--------------|---------------|---------------|---------------|---------|
+| `< 100`      | 100           | 150           | 80            | 0.08    |
+| `< 500`      | 200           | 300           | 150           | 0.05    |
+| `< 1000`     | 300           | 500           | 250           | 0.03    |
+| `≥ 1000`     | 500           | 800           | 500           | 0.01 (standard) |
+
+Implemented in `train_eu_kiki_v2_curriculum.sh`. Domains without `train.jsonl` are silently skipped (P2 hardening: add explicit warning).
 
 ### eu-kiki v1 training (sister project)
 
