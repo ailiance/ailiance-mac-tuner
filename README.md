@@ -2,6 +2,17 @@
 
 Fine-tune large language models on Apple Silicon using the full unified memory — no quantization needed.
 
+## Where to find related artifacts
+
+- **Live demo & cockpit**: https://www.ailiance.fr
+- **Status dashboard**: https://home.saillant.cc
+- **HuggingFace IP source-of-truth**: https://huggingface.co/electron-rare
+- **HuggingFace product distribution**: https://huggingface.co/Ailiance-fr
+- **Audit-grade bench validators**: https://github.com/electron-rare/iact-bench
+- **Benchmark results**: https://github.com/electron-rare/electron-bench
+
+Ailiance is the EU-sovereign LLM serving stack of [L'Electron Rare](https://www.electron-rare.fr), a French SME. Multi-model, audit-grade, EU AI Act Art. 13/15/52/53 transparency.
+
 ## What This Does
 
 Distills Claude Opus reasoning into open-source LLMs (Mistral Large 123B, Qwen3.5-122B-A10B, Devstral 2 123B) using MLX on a single Mac Studio. BF16 full-precision training with LoRA, enabled by 512 GB unified memory.
