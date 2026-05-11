@@ -20,7 +20,7 @@ CONFIG="${1:-configs/mistral-large.yaml}"
 MODEL_ID=$(grep "^model_id:" "$SCRIPT_DIR/$CONFIG" | awk '{print $2}')
 DATASET_ID=$(grep "^dataset_id:" "$SCRIPT_DIR/$CONFIG" | awk '{print $2}')
 
-echo "=== KIKI-Mac_tunner Download ==="
+echo "=== ailiance-mac-tuner Download ==="
 echo "Config: $CONFIG"
 echo "Model: $MODEL_ID"
 echo "Dataset: $DATASET_ID"

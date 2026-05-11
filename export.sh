@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-# KIKI-Mac_tunner — Export: merge LoRA + convert GGUF + quantize
+# ailiance-mac-tuner — Export: merge LoRA + convert GGUF + quantize
 # =============================================================
 # Usage:
 #   ./export.sh                                 # Full export (merge + GGUF)
@@ -44,7 +44,7 @@ if [[ "$QUICK" == "true" ]]; then
     # Serve with: llama-server -m base.gguf --lora adapter.gguf
     # No 250GB merge needed — fast iteration for testing quality
     # =========================================================
-    echo "=== KIKI-Mac_tunner Quick Export (LoRA GGUF) ==="
+    echo "=== ailiance-mac-tuner Quick Export (LoRA GGUF) ==="
     echo "Adapter: $OUTPUT_DIR/final-lora"
     echo ""
 
@@ -82,7 +82,7 @@ fi
 # =========================================================
 # Full path: merge LoRA → full model → GGUF + quantize
 # =========================================================
-echo "=== KIKI-Mac_tunner Full Export ==="
+echo "=== ailiance-mac-tuner Full Export ==="
 echo "Base model: models/$MODEL_NAME"
 echo "Adapter: $OUTPUT_DIR/final-lora"
 echo "Merged → $MERGED_DIR"

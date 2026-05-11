@@ -1,4 +1,4 @@
-"""Merge KIKI-Mac_tunner + HuggingFace mascarade datasets for 10 niche domains.
+"""Merge ailiance-mac-tuner + HuggingFace mascarade datasets for 10 niche domains.
 
 Downloads HF datasets, converts formats, deduplicates, shuffles (seed 42),
 and writes merged data/merged/<domain>/train.jsonl + valid.jsonl (90/10 split).
@@ -189,7 +189,7 @@ def load_instruction_file(path: Path) -> list[dict]:
 
 
 def load_kiki_messages_file(path: Path) -> list[dict]:
-    """Load a KIKI-Mac_tunner train.jsonl (already in messages format)."""
+    """Load a ailiance-mac-tuner train.jsonl (already in messages format)."""
     examples: list[dict] = []
     for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
@@ -222,7 +222,7 @@ def merge_domain(
     counts: dict[str, int] = {}
     all_examples: list[dict] = []
 
-    # 1. KIKI-Mac_tunner local data
+    # 1. ailiance-mac-tuner local data
     kiki_path = kiki_root / domain / "train.jsonl"
     if kiki_path.exists():
         kiki_examples = load_kiki_messages_file(kiki_path)
@@ -312,7 +312,7 @@ def main() -> None:
     )
 
     parser = argparse.ArgumentParser(
-        description="Merge KIKI-Mac_tunner + HF mascarade datasets for micro-kiki domains.",
+        description="Merge ailiance-mac-tuner + HF mascarade datasets for micro-kiki domains.",
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -331,8 +331,8 @@ def main() -> None:
         default=None,
         metavar="PATH",
         help=(
-            "Override path to KIKI-Mac_tunner data root "
-            "(default: ~/KIKI-Mac_tunner/data/micro-kiki). "
+            "Override path to ailiance-mac-tuner data root "
+            "(default: ~/ailiance-mac-tuner/data/micro-kiki). "
             "Use this on non-Studio machines where that directory is absent."
         ),
     )
@@ -344,7 +344,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    kiki_root = Path(args.kiki_root).expanduser() if args.kiki_root else Path.home() / "KIKI-Mac_tunner" / "data" / "micro-kiki"
+    kiki_root = Path(args.kiki_root).expanduser() if args.kiki_root else Path.home() / "ailiance-mac-tuner" / "data" / "micro-kiki"
     output_root = Path(args.output_root)
 
     domains = ALL_DOMAINS if args.all else [args.domain]

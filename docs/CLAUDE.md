@@ -9,7 +9,7 @@
 | 122B Opus-v3 training | 2026-04-15 | Fait (val 0.468) |
 | Qwen3.5-122B mac-port | 2026-04-15 | Fait |
 | Mistral Small distill | 2026-04-15 | Fait |
-| Devstral v4 Opus distill | 2026-04-15 | En cours (eu-kiki devstral-python) |
+| Devstral v4 Opus distill | 2026-04-15 | En cours (ailiance devstral-python) |
 | Micro_KIKI plan 1 (data) | 2026-04-15 | Fait (63K examples, 32 domaines) |
 | Micro_KIKI plan 2 (Brainstacks) | 2026-04-15 | **Fait** (32 piles entraînées, rank dynamique) |
 | Micro_KIKI plan 3 (meta-router) | 2026-04-15 | Config + scripts en place |
@@ -66,17 +66,17 @@
 
 Datasets sources : OpenCodeReasoning (nvidia), OpenCodeInstruct (nvidia), Codeforces-CoTs (open-r1), Magicoder OSS-Instruct, CodeFeedback, OpenHands trajectoires, Nemotron-SWE.
 
-## Pipeline eu-kiki (sister project)
+## Pipeline ailiance (sister project)
 
 3 modèles EU-souverains entraînés en parallèle :
 
 | Modèle | Origine | Domaines | Config |
 |--------|---------|----------|--------|
-| Apertus 70B Instruct | EPFL+ETH+CSCS (CH) | 20 (electronics, EMC, DSP, SPICE, KiCad, IEC norms…) | `configs/eu-kiki-apertus-electronics.yaml` |
-| Devstral 2 24B MLX-4bit | Mistral AI (FR) | 16 (Python, Rust, TS, C++, devops, llm-ops, ml-training…) | `configs/eu-kiki-devstral-python.yaml` |
-| EuroLLM 22B Instruct | utter-project (EU) | 4 (chat-fr, traduction-tech, redaction-multilingue) | `configs/eu-kiki-eurollm-chatfr.yaml` |
+| Apertus 70B Instruct | EPFL+ETH+CSCS (CH) | 20 (electronics, EMC, DSP, SPICE, KiCad, IEC norms…) | `configs/ailiance-apertus-electronics.yaml` |
+| Devstral 2 24B MLX-4bit | Mistral AI (FR) | 16 (Python, Rust, TS, C++, devops, llm-ops, ml-training…) | `configs/ailiance-devstral-python.yaml` |
+| EuroLLM 22B Instruct | utter-project (EU) | 4 (chat-fr, traduction-tech, redaction-multilingue) | `configs/ailiance-eurollm-chatfr.yaml` |
 
-Scripts : `scripts/train_eu_kiki_{apertus,devstral,eurollm}.py`, batch séquentiel `scripts/train_eu_kiki_batch.py`, HF-traceable `scripts/train_eu_kiki_hf_batch.py`. Voir aussi `~/Documents/Projets/eu-kiki/`.
+Scripts : `scripts/train_eu_kiki_{apertus,devstral,eurollm}.py`, batch séquentiel `scripts/train_eu_kiki_batch.py`, HF-traceable `scripts/train_eu_kiki_hf_batch.py`. Voir aussi `~/Documents/Projets/ailiance/`.
 
 ## Micro_KIKI Pipeline
 

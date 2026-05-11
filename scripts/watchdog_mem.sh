@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -uo pipefail
-ROOT="/Users/clems/KIKI-Mac_tunner"
+ROOT="/Users/clems/ailiance-mac-tuner"
 LOGDIR="${ROOT}/logs/122b-macport"
 CSV="${LOGDIR}/memcsv-$(date +%Y%m%d-%H%M%S).csv"
 SWAP_THRESHOLD_GB=80

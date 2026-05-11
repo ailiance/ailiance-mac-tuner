@@ -135,7 +135,7 @@ while true; do
 
     # === AFFICHAGE ===
     echo "╔══════════════════════════════════════════════════════════════════╗"
-    echo "║  🔥 KIKI-Mac_tunner — Training Monitor         $DATE $NOW ║"
+    echo "║  🔥 ailiance-mac-tuner — Training Monitor         $DATE $NOW ║"
     echo "╠══════════════════════════════════════════════════════════════════╣"
     echo "║  Modele   : Qwen3.5-122B-A10B-Opus-v3 (BF16, MoE 10B actifs)  ║"
     printf "║  Process  : %-53s ║\n" "$STATUS (PID ${PID:-—}, ${CPU:-0}%CPU, ${PMEM:-0}%MEM)"

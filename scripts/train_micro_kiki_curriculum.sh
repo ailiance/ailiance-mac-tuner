@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-cd ~/KIKI-Mac_tunner
+cd ~/ailiance-mac-tuner
 source .venv/bin/activate
 
 echo "=== micro-kiki curriculum training ==="

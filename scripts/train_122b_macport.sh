@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="/Users/clems/KIKI-Mac_tunner"
+ROOT="/Users/clems/ailiance-mac-tuner"
 CONFIG="${ROOT}/configs/qwen35-122b-macport.yaml"
 LOGDIR="${ROOT}/logs/122b-macport"
 TRAIN_LOG="${LOGDIR}/train-$(date +%Y%m%d-%H%M%S).log"

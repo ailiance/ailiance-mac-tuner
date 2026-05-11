@@ -3,10 +3,10 @@
 # 12 keys: 9 attention (self_attn + linear_attn) + 3 shared_expert MLP (dense, no 256 MoE experts)
 # rank 128 / scale 128 / warmup 250 / 5000 iters = 3.37 epochs on 11880 train samples
 
-model: /Users/clems/KIKI-Mac_tunner/models/Qwen3.5-122B-A10B-BF16
+model: /Users/clems/ailiance-mac-tuner/models/Qwen3.5-122B-A10B-BF16
 train: true
-data: /Users/clems/KIKI-Mac_tunner/data/final-opus-v3-1
-adapter_path: /Users/clems/KIKI-Mac_tunner/output/qwen35-122b-macport
+data: /Users/clems/ailiance-mac-tuner/data/final-opus-v3-1
+adapter_path: /Users/clems/ailiance-mac-tuner/output/qwen35-122b-macport
 
 fine_tune_type: lora
 num_layers: -1

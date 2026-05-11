@@ -491,8 +491,8 @@ def find_model_path() -> Path:
     """Find Qwen3.5-0.8B model in common locations."""
     candidates = [
         Path.home() / ".cache" / "huggingface" / "hub" / "models--Qwen--Qwen3.5-0.8B",
-        Path("/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-0.8B"),
-        Path("/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-0.8B-bf16"),
+        Path("/Users/clems/ailiance-mac-tuner/models/Qwen3.5-0.8B"),
+        Path("/Users/clems/ailiance-mac-tuner/models/Qwen3.5-0.8B-bf16"),
     ]
     for c in candidates:
         if c.exists():
@@ -503,7 +503,7 @@ def find_model_path() -> Path:
                 if snap_dirs:
                     return snap_dirs[0]
             return c
-    return Path("/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-0.8B")
+    return Path("/Users/clems/ailiance-mac-tuner/models/Qwen3.5-0.8B")
 
 
 def load_weights_from_hf(model: Qwen35SmallDecodeModel, model_path: Path) -> None:

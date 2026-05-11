@@ -1,10 +1,10 @@
 #!/bin/bash
 # =============================================================
-# KIKI-Mac_tunner — Setup for Mac Studio M4 Pro (512 Go)
+# ailiance-mac-tuner — Setup for Mac Studio M4 Pro (512 Go)
 # =============================================================
 set -euo pipefail
 
-echo "=== KIKI-Mac_tunner Setup ==="
+echo "=== ailiance-mac-tuner Setup ==="
 echo "Target: Mac Studio M4 Pro, 512 Go unified memory"
 echo ""
 

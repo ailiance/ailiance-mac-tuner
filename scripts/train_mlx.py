@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-KIKI-Mac_tunner — MLX LoRA fine-tuning for Apple Silicon.
+ailiance-mac-tuner — MLX LoRA fine-tuning for Apple Silicon.
 
 Designed for Mac Studio M3 Ultra / M4 Pro 512 Go.
 Supports bf16 full precision LoRA on models up to ~250B parameters.
@@ -181,7 +181,7 @@ class SafetyCallback(TrainingCallback):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="KIKI-Mac_tunner — MLX LoRA training")
+    parser = argparse.ArgumentParser(description="ailiance-mac-tuner — MLX LoRA training")
     parser.add_argument(
         "--config",
         type=str,
@@ -197,7 +197,7 @@ def main():
     config = load_config(script_dir / args.config)
 
     print("=" * 60)
-    print("KIKI-Mac_tunner — MLX LoRA Fine-tuning")
+    print("ailiance-mac-tuner — MLX LoRA Fine-tuning")
     print(f"Config: {args.config}")
     print(f"Model: {config['model_id']}")
     print(f"Precision: {config.get('precision', 'bf16')}")

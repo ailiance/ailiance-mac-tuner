@@ -18,7 +18,7 @@ Documentation projet. Les specs et plans de travail datés vivent dans
 | `2026-04-15-122b-opus-v3-training.md` | Training Qwen3.5-122B-A10B Opus-v3 (training final, val 0.468). |
 | `2026-04-15-qwen35-122b-macport-training.md` | Profil mac-port LoRA rank 128, 5000 iters, 3.37 epochs. |
 | `2026-04-15-mistral-small-opus-distill.md` | Distill Opus → Mistral Small. |
-| `2026-04-15-devstral-v4-small-2-opus-distill.md` | Distill Opus → Devstral 2 24B (eu-kiki devstral-python). |
+| `2026-04-15-devstral-v4-small-2-opus-distill.md` | Distill Opus → Devstral 2 24B (ailiance devstral-python). |
 | `2026-04-15-micro-kiki-plan1-data-pipeline.md` | Plan 1 — pipeline data 1.57M → 63K (25 sources). |
 | `2026-04-15-micro-kiki-plan2-brainstacks-training.md` | Plan 2 — Brainstacks 32 piles avec null-space projection. |
 | `2026-04-15-micro-kiki-plan3-meta-router.md` | Plan 3 — meta-router 32 domaines (attention pooling, top-k=4). |

@@ -3,7 +3,7 @@
 # Usage: ./scripts/pipeline_opus_v3.sh [phase1|phase2|phase3|phase4|phase5|all|status]
 
 set -e
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 
 case "${1:-status}" in

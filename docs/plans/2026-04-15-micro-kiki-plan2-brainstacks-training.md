@@ -161,7 +161,7 @@ curriculum:
 
 - [ ] **Step 2: Verify YAML parses correctly**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python3 -c "import yaml; c=yaml.safe_load(open('configs/micro_kiki/brainstacks.yaml')); print(f'Curriculum: {len(c[\"curriculum\"])} domains'); assert len(c['curriculum'])==32"`
+Run: `cd /Users/clems/ailiance-mac-tuner && python3 -c "import yaml; c=yaml.safe_load(open('configs/micro_kiki/brainstacks.yaml')); print(f'Curriculum: {len(c[\"curriculum\"])} domains'); assert len(c['curriculum'])==32"`
 Expected: `Curriculum: 32 domains`
 
 - [ ] **Step 3: Commit**
@@ -296,7 +296,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_moe_lora.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_moe_lora.py`
 Expected: `ModuleNotFoundError: No module named 'micro_kiki.moe_lora'`
 
 - [ ] **Step 3: Write MoE-LoRA implementation**
@@ -562,7 +562,7 @@ def moe_lora_forward_hook(base_linear: nn.Linear, moe_lora: MoELoRALayer, x: mx.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_moe_lora.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_moe_lora.py`
 Expected: `All MoE-LoRA tests passed.`
 
 - [ ] **Step 5: Commit**
@@ -689,7 +689,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_null_space.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_null_space.py`
 Expected: `ModuleNotFoundError: No module named 'micro_kiki.null_space'`
 
 - [ ] **Step 3: Write null-space projection implementation**
@@ -929,7 +929,7 @@ def build_projectors_for_stack(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_null_space.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_null_space.py`
 Expected: `All null-space tests passed.`
 
 - [ ] **Step 5: Commit**
@@ -1017,7 +1017,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_residual_boost.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_residual_boost.py`
 Expected: `ModuleNotFoundError: No module named 'micro_kiki.residual_boost'`
 
 - [ ] **Step 3: Write residual boosting implementation**
@@ -1281,7 +1281,7 @@ def _project_all_grads(grads: dict, projectors: dict) -> dict:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_residual_boost.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_residual_boost.py`
 Expected: `All residual boosting tests passed.`
 
 - [ ] **Step 5: Commit**
@@ -1414,7 +1414,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_train_stack.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_train_stack.py`
 Expected: `ModuleNotFoundError: No module named 'micro_kiki.train_stack'`
 
 - [ ] **Step 3: Write the single stack training script**
@@ -1926,7 +1926,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python tests/micro_kiki/test_train_stack.py`
+Run: `cd /Users/clems/ailiance-mac-tuner && python tests/micro_kiki/test_train_stack.py`
 Expected: `All train_stack integration tests passed.`
 
 - [ ] **Step 5: Commit**
@@ -2154,7 +2154,7 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Verify the script parses**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && python -c "import ast; ast.parse(open('scripts/micro_kiki/eval_stack.py').read()); print('OK')"`
+Run: `cd /Users/clems/ailiance-mac-tuner && python -c "import ast; ast.parse(open('scripts/micro_kiki/eval_stack.py').read()); print('OK')"`
 Expected: `OK`
 
 - [ ] **Step 3: Commit**
@@ -2377,11 +2377,11 @@ python "$SCRIPT_DIR/eval_stack.py" --config "$CONFIG" --all
 
 - [ ] **Step 3: Make the orchestrator executable**
 
-Run: `chmod +x /Users/clems/KIKI-Mac_tunner/scripts/micro_kiki/train_all_stacks.sh`
+Run: `chmod +x /Users/clems/ailiance-mac-tuner/scripts/micro_kiki/train_all_stacks.sh`
 
 - [ ] **Step 4: Verify dry-run mode works**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && ./scripts/micro_kiki/train_all_stacks.sh --dry-run 2>&1 | head -20`
+Run: `cd /Users/clems/ailiance-mac-tuner && ./scripts/micro_kiki/train_all_stacks.sh --dry-run 2>&1 | head -20`
 Expected: Lines showing `[DRY RUN] Would run:` for each domain (or an error about missing datasets, which is expected before Plan 1 completes).
 
 - [ ] **Step 5: Commit**

@@ -220,13 +220,13 @@ def main() -> None:
     parser.add_argument(
         "--v2-dir",
         type=Path,
-        default=Path("/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v2"),
+        default=Path("/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v2"),
         help="Path to V2 adapter stacks (default: Studio path)",
     )
     parser.add_argument(
         "--v3-dir",
         type=Path,
-        default=Path("/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v3-r16"),
+        default=Path("/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v3-r16"),
         help="Path to V3 adapter stacks (default: Studio path)",
     )
     parser.add_argument(

@@ -9,9 +9,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_MODEL = Path("/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-4B")
-STACKS_DIR = Path("/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks")
-OUTPUT_DIR = Path("/Users/clems/KIKI-Mac_tunner/output/micro-kiki/gguf")
+BASE_MODEL = Path("/Users/clems/ailiance-mac-tuner/models/Qwen3.5-4B")
+STACKS_DIR = Path("/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks")
+OUTPUT_DIR = Path("/Users/clems/ailiance-mac-tuner/output/micro-kiki/gguf")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # We fuse the "best" stack (lowest val_loss) or all stacks into one merged model

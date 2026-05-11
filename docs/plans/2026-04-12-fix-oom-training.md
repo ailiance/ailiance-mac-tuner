@@ -29,7 +29,7 @@
 - [ ] **Step 1: Check if MLX is installed**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 python3 -c "import mlx; print(mlx.__version__)"
 ```
@@ -39,7 +39,7 @@ Expected: Either prints version >=0.31.0, or ImportError.
 - [ ] **Step 2: Reinstall deps if missing**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
@@ -229,7 +229,7 @@ mistral-small, qwen-27b: 10 (more headroom at 24-27B)"
 - [ ] **Step 1: Activate venv and run syntax check**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 python3 -c "import scripts.train_mlx" 2>&1 || python3 -c "exec(open('scripts/train_mlx.py').read().split('if __name__')[0])"
 ```
@@ -256,7 +256,7 @@ Expected: `Config OK: {'val_batches': 5, 'memory_limit_gb': 400, 'lora_rank': 48
 - [ ] **Step 3: Launch training**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 ./train.sh 2>&1 | tee training.log
 ```
 

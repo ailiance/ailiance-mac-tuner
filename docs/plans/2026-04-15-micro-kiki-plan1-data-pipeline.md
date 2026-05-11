@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.14, `hf` CLI, `pyarrow`, `mlx-lm`/`mlx-vlm` for generation, YAML config, JSONL output format
 
-**Working directory:** `/Users/clems/KIKI-Mac_tunner`
+**Working directory:** `/Users/clems/ailiance-mac-tuner`
 **Python venv:** `.venv/` (activate with `source .venv/bin/activate`)
 
 ---

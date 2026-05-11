@@ -3,7 +3,7 @@
 # Usage: nohup ./scripts/auto_post_training.sh <TRAINING_PID> > logs/auto-post.log 2>&1 &
 
 set -e
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 
 TRAIN_PID="${1:-}"
 if [ -z "$TRAIN_PID" ]; then

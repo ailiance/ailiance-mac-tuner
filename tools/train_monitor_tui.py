@@ -10,7 +10,7 @@ Run on Studio:
     .venv/bin/python tools/train_monitor_tui.py
 
 Or from GrosMac with a TTY:
-    ssh -t studio "cd KIKI-Mac_tunner && .venv/bin/python tools/train_monitor_tui.py"
+    ssh -t studio "cd ailiance-mac-tuner && .venv/bin/python tools/train_monitor_tui.py"
 
 Options:
     --log PATH       explicit train log (default: latest train-*.log under --root)
@@ -333,7 +333,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--log", default=None)
     ap.add_argument("--memcsv", default=None)
-    ap.add_argument("--root", default="/Users/clems/KIKI-Mac_tunner/logs/122b-macport")
+    ap.add_argument("--root", default="/Users/clems/ailiance-mac-tuner/logs/122b-macport")
     ap.add_argument("--total-iters", type=int, default=3000)
     ap.add_argument("--refresh", type=float, default=2.0)
     args = ap.parse_args()

@@ -14,8 +14,8 @@
 set -euo pipefail
 
 # --- Defaults (Studio paths) ---
-V2_DIR="/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v2"
-V3_DIR="/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v3-r16"
+V2_DIR="/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v2"
+V3_DIR="/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v3-r16"
 OUT_DIR="output/micro-kiki/stacks-hybrid"
 MANIFEST="$OUT_DIR/hybrid_manifest.json"
 DRY_RUN=false

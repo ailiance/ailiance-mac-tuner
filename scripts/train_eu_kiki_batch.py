@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Batch train all eu-kiki LoRA adapters sequentially.
+"""Batch train all ailiance LoRA adapters sequentially.
 
 Usage:
-    cd ~/KIKI-Mac_tunner
+    cd ~/ailiance-mac-tuner
     .venv/bin/python scripts/train_eu_kiki_batch.py
 
 Trains adapters for 3 models across all domains.
@@ -18,10 +18,10 @@ import time
 import yaml
 from pathlib import Path
 
-sys.path.insert(0, "/Users/clems/KIKI-Mac_tunner/lib")
+sys.path.insert(0, "/Users/clems/ailiance-mac-tuner/lib")
 
 PROJECT = Path(__file__).parent.parent
-EU_KIKI = Path.home() / "eu-kiki"
+AILIANCE = Path.home() / "ailiance"
 DATA_ROOT = PROJECT / "data" / "micro-kiki"
 
 # Model configs: (model_path, output_prefix, domains, grad_accum, max_seq, iters)
@@ -92,13 +92,13 @@ def find_data(domain: str) -> Path | None:
 
 
 def adapter_exists(model_name: str, domain: str) -> bool:
-    path = EU_KIKI / "output" / "adapters" / model_name / domain / "adapters.safetensors"
+    path = AILIANCE / "output" / "adapters" / model_name / domain / "adapters.safetensors"
     return path.exists()
 
 
 def train_one(model_name: str, model_cfg: dict, domain: str):
     """Train one LoRA adapter."""
-    output_dir = str(PROJECT / "output" / "eu-kiki" / f"{model_name}-{domain}")
+    output_dir = str(PROJECT / "output" / "ailiance" / f"{model_name}-{domain}")
     os.makedirs(output_dir, exist_ok=True)
 
     data_path = find_data(domain)
@@ -153,10 +153,10 @@ def train_one(model_name: str, model_cfg: dict, domain: str):
     elapsed = time.time() - t0
     print(f"  DONE {domain} in {elapsed / 60:.1f} min")
 
-    # Copy adapter to eu-kiki
+    # Copy adapter to ailiance
     adapter_src = Path(output_dir) / "adapters.safetensors"
     if adapter_src.exists():
-        dest = EU_KIKI / "output" / "adapters" / model_name / domain
+        dest = AILIANCE / "output" / "adapters" / model_name / domain
         dest.mkdir(parents=True, exist_ok=True)
         import shutil
         shutil.copy2(str(adapter_src), str(dest / "adapters.safetensors"))

@@ -208,7 +208,7 @@ Expected: Compilation ~5 min, installation OK.
 
 Run:
 ```bash
-source /Users/clems/KIKI-Mac_tunner/.venv/bin/activate
+source /Users/clems/ailiance-mac-tuner/.venv/bin/activate
 python -m mlx_lm lora --config configs/mlx-lm-qwen35-122b-opus-v3.yaml 2>&1 | head -30
 ```
 
@@ -218,7 +218,7 @@ Si toujours OOM memoire (pas handles) → passer a Piste 3.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add configs/mlx-lm-qwen35-122b-opus-v3.yaml
 git commit -m "fix: recompiled MLX with 2x Metal buffer limit"
 ```

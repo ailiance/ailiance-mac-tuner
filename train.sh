@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-# KIKI-Mac_tunner — Training launcher
+# ailiance-mac-tuner — Training launcher
 # =============================================================
 # Usage:
 #   ./train.sh                              # Mistral Large (default)
@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "=== KIKI-Mac_tunner ==="
+echo "=== ailiance-mac-tuner ==="
 echo "Config: $CONFIG"
 echo "Resume: ${RESUME:-no}"
 echo ""

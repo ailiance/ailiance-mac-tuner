@@ -38,7 +38,7 @@ logger = logging.getLogger("train_niches_mlxtune")
 
 PROJECT_ROOT = Path(__file__).parent.parent
 MERGED_DATA = PROJECT_ROOT / "data" / "merged"
-KIKI_DATA = Path.home() / "KIKI-Mac_tunner" / "data" / "micro-kiki"
+KIKI_DATA = Path.home() / "ailiance-mac-tuner" / "data" / "micro-kiki"
 MODEL_PATH = PROJECT_ROOT / "models" / "qwen3.5-35b-a3b"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs" / "stacks"
 PROGRESS_FILE = PROJECT_ROOT / ".ralph" / "progress.txt"
@@ -202,8 +202,8 @@ def train_domain(domain: str) -> None:
 mx.set_memory_limit(460 * 1024**3)
 mx.set_cache_limit(32 * 1024**3)
 import os, sys
-os.environ["PYTHONPATH"] = "/Users/clems/KIKI-Mac_tunner/lib"
-sys.path.insert(0, "/Users/clems/KIKI-Mac_tunner/lib")
+os.environ["PYTHONPATH"] = "/Users/clems/ailiance-mac-tuner/lib"
+sys.path.insert(0, "/Users/clems/ailiance-mac-tuner/lib")
 from mlx_lm_fork.lora import main as lora_main
 sys.argv = ["lora", "-c", "{config_path}",
             "--data", "{data_path.parent}",
@@ -214,7 +214,7 @@ lora_main()
     script_path = output_dir / "_train.py"
     script_path.write_text(train_script)
 
-    python = Path.home() / "KIKI-Mac_tunner" / ".venv" / "bin" / "python3"
+    python = Path.home() / "ailiance-mac-tuner" / ".venv" / "bin" / "python3"
 
     t0 = time.time()
     result = subprocess.run(

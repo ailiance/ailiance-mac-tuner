@@ -15,14 +15,14 @@ The previous approach used custom MoE-LoRA (4 experts per projection, top-2 rout
 
 ## Training
 
-Training runs on Mac Studio M3 Ultra 512 GB via MLX LoRA (KIKI-Mac_tunner pipeline). Not on kxkm-ai — the model is too large (74 GB BF16) for 24 GB VRAM.
+Training runs on Mac Studio M3 Ultra 512 GB via MLX LoRA (ailiance-mac-tuner pipeline). Not on kxkm-ai — the model is too large (74 GB BF16) for 24 GB VRAM.
 
 ```bash
-# From ~/KIKI-Mac_tunner
+# From ~/ailiance-mac-tuner
 ./train.sh --config configs/mlx-lm-qwen35-35b-a3b-micro-kiki.yaml
 ```
 
-Config: `~/KIKI-Mac_tunner/configs/mlx-lm-qwen35-35b-a3b-micro-kiki.yaml`
+Config: `~/ailiance-mac-tuner/configs/mlx-lm-qwen35-35b-a3b-micro-kiki.yaml`
 
 Key parameters: LR 1e-5, batch_size 2, grad_accumulation 8, rank 16, 2000 iters, max_seq_length 4096.
 
@@ -31,12 +31,12 @@ See `docs/training/README.md` for the full workflow.
 ## Training Order
 
 Sequential, curriculum order (foundations first). Never in parallel — stacks interfere.
-Check `~/KIKI-Mac_tunner/configs/micro_kiki/brainstacks.yaml` for domain ordering and dataset mappings.
+Check `~/ailiance-mac-tuner/configs/micro_kiki/brainstacks.yaml` for domain ordering and dataset mappings.
 
 ## Adding a New Stack
 
-1. Ensure dataset is classified + deduped in `~/KIKI-Mac_tunner/data/micro-kiki/<domain>/`
-2. Update `~/KIKI-Mac_tunner/configs/mlx-lm-qwen35-35b-a3b-micro-kiki.yaml` to point at the new domain
+1. Ensure dataset is classified + deduped in `~/ailiance-mac-tuner/data/micro-kiki/<domain>/`
+2. Update `~/ailiance-mac-tuner/configs/mlx-lm-qwen35-35b-a3b-micro-kiki.yaml` to point at the new domain
 3. Train with BF16, Mac Studio only
 4. Run forgetting check IMMEDIATELY after training
 5. Test domain router with new stack active

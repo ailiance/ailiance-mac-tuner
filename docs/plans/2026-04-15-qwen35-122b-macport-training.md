@@ -128,7 +128,7 @@ echo 'iogpu.wired_limit_mb=458752' | sudo tee -a /etc/sysctl.conf
 ### Lancer le training
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 ./scripts/train_122b_macport.sh
 # ou en détaché :
 nohup ./scripts/train_122b_macport.sh > logs/122b-macport/nohup.out 2>&1 &
@@ -143,7 +143,7 @@ Le wrapper vérifie le wired-limit, lance le watchdog en arrière-plan, puis `ml
 .venv/bin/python tools/train_monitor_tui.py --total-iters 5000
 
 # Depuis une autre machine (TTY requis) :
-ssh -t studio "cd KIKI-Mac_tunner && .venv/bin/python tools/train_monitor_tui.py --total-iters 5000"
+ssh -t studio "cd ailiance-mac-tuner && .venv/bin/python tools/train_monitor_tui.py --total-iters 5000"
 ```
 
 Affiche : progression iter/5000 + ETA, train loss sparkline + trajectory val, débit (it/s, tok/s, LR), mémoire (RSS, swap, peak Metal, free %), checks santé (loss NaN, peak proche limite, swap thrash), stream log récent.
@@ -168,10 +168,10 @@ Pour accélérer au prix d'un peu de qualité :
 
 # Export GGUF Q4_K_M pour serving llama.cpp
 cd ~/llama.cpp
-python convert_hf_to_gguf.py ~/KIKI-Mac_tunner/output/qwen35-122b-macport-fused \
+python convert_hf_to_gguf.py ~/ailiance-mac-tuner/output/qwen35-122b-macport-fused \
   --outtype bf16 --outfile /tmp/qwen35-macport-BF16.gguf
 ./build/bin/llama-quantize /tmp/qwen35-macport-BF16.gguf \
-  ~/KIKI-Mac_tunner/output/qwen35-122b-macport-Q4_K_M.gguf Q4_K_M
+  ~/ailiance-mac-tuner/output/qwen35-122b-macport-Q4_K_M.gguf Q4_K_M
 ```
 
 ## Troubleshooting

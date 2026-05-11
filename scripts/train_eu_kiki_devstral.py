@@ -7,10 +7,10 @@ mx.set_cache_limit(32 * 1024**3)
 import os, sys, yaml
 from pathlib import Path
 
-sys.path.insert(0, "/Users/clems/KIKI-Mac_tunner/lib")
+sys.path.insert(0, "/Users/clems/ailiance-mac-tuner/lib")
 
 PROJECT = Path(__file__).parent.parent
-OUTPUT = str(PROJECT / "output" / "eu-kiki" / "devstral-python")
+OUTPUT = str(PROJECT / "output" / "ailiance" / "devstral-python")
 os.makedirs(OUTPUT, exist_ok=True)
 
 config = {

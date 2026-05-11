@@ -239,7 +239,7 @@ D'après le projet KIKI actuel:
 
 | # | Expert | Dataset Source |
 |---|--------|---------------|
-| 19 | ESP32/STM32 firmware | Custom from KIKI-Mac_tunner data |
+| 19 | ESP32/STM32 firmware | Custom from ailiance-mac-tuner data |
 | 20 | KiCad / PCB design | Custom from mascarade dataset |
 | 21 | Electronics theory | Custom |
 | 22 | RTOS / bare metal | Custom |

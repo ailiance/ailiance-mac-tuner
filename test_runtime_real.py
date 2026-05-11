@@ -8,8 +8,8 @@ Usage (on Studio):
     /opt/homebrew/bin/python3.12 scripts/test_runtime_real.py
 
 Expects:
-    - Base model: /Users/clems/KIKI-Mac_tunner/models/Qwen3.5-4B
-    - Adapters: /Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v3-r16/<domain>/
+    - Base model: /Users/clems/ailiance-mac-tuner/models/Qwen3.5-4B
+    - Adapters: /Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v3-r16/<domain>/
 """
 from __future__ import annotations
 
@@ -38,8 +38,8 @@ logger = logging.getLogger("test_runtime_real")
 # Paths
 # ---------------------------------------------------------------------------
 
-BASE_MODEL = "/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-4B"
-ADAPTER_ROOT = "/Users/clems/KIKI-Mac_tunner/output/micro-kiki/stacks-v3-r16"
+BASE_MODEL = "/Users/clems/ailiance-mac-tuner/models/Qwen3.5-4B"
+ADAPTER_ROOT = "/Users/clems/ailiance-mac-tuner/output/micro-kiki/stacks-v3-r16"
 
 # ---------------------------------------------------------------------------
 # Prompts
