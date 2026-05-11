@@ -319,7 +319,7 @@ main()
     script_path = output_dir / "_train_dpo.py"
     script_path.write_text(train_script)
 
-    python = Path.home() / "KIKI-Mac_tunner" / ".venv" / "bin" / "python3"
+    python = Path.home() / "ailiance-mac-tuner" / ".venv" / "bin" / "python3"
 
     t0 = time.time()
     result = subprocess.run(

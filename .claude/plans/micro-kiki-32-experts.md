@@ -11,7 +11,7 @@
 
 ### Problem Statement
 
-The KIKI-Mac_tunner project currently fine-tunes monolithic LLMs (Mistral Large 123B, Qwen3.5-122B) via LoRA on Apple Silicon. These models are excellent but impractical for deployment:
+The ailiance-mac-tuner project currently fine-tunes monolithic LLMs (Mistral Large 123B, Qwen3.5-122B) via LoRA on Apple Silicon. These models are excellent but impractical for deployment:
 
 - **122B models** require 244 Go bf16 — only the Mac can run them
 - **Single-LoRA approach** forces a jack-of-all-trades compromise across 32+ domains

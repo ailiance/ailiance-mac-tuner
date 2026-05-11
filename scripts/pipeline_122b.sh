@@ -4,7 +4,7 @@
 # Utilisation : ./scripts/pipeline_122b.sh [distill|merge|train|fuse|gguf|all|status]
 
 set -e
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 
 CONFIG="configs/mlx-lm-qwen35-122b-opus-v3.yaml"
@@ -78,7 +78,7 @@ export_gguf() {
         cd llama-cpp-gguf && cmake -B build -DGGML_METAL=ON && cmake --build build -j$(sysctl -n hw.ncpu)
         CONVERT_SCRIPT="/tmp/llama-cpp-gguf/convert_hf_to_gguf.py"
         QUANTIZE="/tmp/llama-cpp-gguf/build/bin/llama-quantize"
-        cd /Users/clems/KIKI-Mac_tunner
+        cd /Users/clems/ailiance-mac-tuner
     fi
 
     echo "Conversion → GGUF F16..."

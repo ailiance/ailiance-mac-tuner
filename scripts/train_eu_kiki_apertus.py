@@ -2,7 +2,7 @@
 """Train Apertus-70B LoRA via mlx_lm_fork (Metal buffer patches).
 
 Usage:
-    cd ~/KIKI-Mac_tunner
+    cd ~/ailiance-mac-tuner
     .venv/bin/python scripts/train_eu_kiki_apertus.py
 
 Requires: sudo sysctl -w iogpu.wired_limit_mb=458752
@@ -17,12 +17,12 @@ import yaml
 from pathlib import Path
 
 # Use the fork with Metal buffer patches
-sys.path.insert(0, "/Users/clems/KIKI-Mac_tunner/lib")
+sys.path.insert(0, "/Users/clems/ailiance-mac-tuner/lib")
 
 PROJECT = Path(__file__).parent.parent
 MODEL = str(PROJECT / "models" / "Apertus-70B-Instruct-2509")
 DATA = str(PROJECT / "data" / "micro-kiki" / "electronics")
-OUTPUT = str(PROJECT / "output" / "eu-kiki" / "apertus-electronics")
+OUTPUT = str(PROJECT / "output" / "ailiance" / "apertus-electronics")
 
 os.makedirs(OUTPUT, exist_ok=True)
 

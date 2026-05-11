@@ -18,7 +18,7 @@ Pipeline inspiré de Devstral v3 (SFT + DAPO + fuse + GGUF), qui a donné 10/10 
 
 | Rôle | Modèle | Machine | Quant |
 |---|---|---|---|
-| Teacher | `mistral-large-opus-fused` (`/Users/clems/KIKI-Mac_tunner/output/mistral-large-opus-fused/`) | Studio M3 Ultra 512 GB | BF16, ~233 GB |
+| Teacher | `mistral-large-opus-fused` (`/Users/clems/ailiance-mac-tuner/output/mistral-large-opus-fused/`) | Studio M3 Ultra 512 GB | BF16, ~233 GB |
 | Student base | `unsloth/mistral-small-3.1-24b-instruct-2503` (déjà dans HF cache kxkm-ai) | kxkm-ai RTX 4090 | 4bit bnb pour SFT, BF16 pour fuse |
 | Student final | `mistral-small-opus-Q4_K_M.gguf` | déployable 4090 | Q4_K_M, ~14 GB |
 
@@ -164,7 +164,7 @@ ssh kxkm@kxkm-ai "nvidia-smi ; pgrep -a llama-server ; pgrep -af train_"
 
 # 1. Lancer teacher sur Studio (dans un tmux)
 ssh studio "tmux new -d -s teacher 'cd ~/llama.cpp && ./build/bin/llama-server \
-  -m /Users/clems/KIKI-Mac_tunner/output/mistral-large-opus-fused/ggml-model-BF16.gguf \
+  -m /Users/clems/ailiance-mac-tuner/output/mistral-large-opus-fused/ggml-model-BF16.gguf \
   -c 8192 -ngl 99 --host 0.0.0.0 --port 8000'"
 # (si fusion n'a pas encore de GGUF : passer par mlx_lm.server + openai adapter)
 
@@ -174,7 +174,7 @@ ssh kxkm@kxkm-ai "autossh -M 0 -f -N -L 18000:localhost:8000 studio"
 # 3. Préparer prompts distill sur kxkm-ai
 ssh kxkm@kxkm-ai "cd ~/kiki-v3 && \
   python scripts/sample_mega_prompts.py --n 12000 --out data/distill_prompts.jsonl && \
-  cat /Users/clems/KIKI-Mac_tunner/configs/eval_prompts.jsonl >> data/distill_prompts.jsonl"
+  cat /Users/clems/ailiance-mac-tuner/configs/eval_prompts.jsonl >> data/distill_prompts.jsonl"
 # (sample_mega_prompts.py reste à écrire, ~30 lignes)
 
 # 4. Phase 1 — teacher forward (background, ~12-18 h)
@@ -220,7 +220,7 @@ ssh kxkm@kxkm-ai "cd ~/kiki-v3 && python scripts/fuse_and_quantize.py \
 - Artefacts créés par ce plan :
   - `/home/kxkm/kiki-v3/configs/mistral-small-opus-sft.yaml` (2.4 KB, YAML OK)
   - `/home/kxkm/kiki-v3/scripts/generate-mistral-large-distill.py` (6.4 KB, 180 lignes, py_compile OK)
-  - ce doc : `/Users/clems/KIKI-Mac_tunner/docs/plans/2026-04-15-mistral-small-opus-distill.md`
+  - ce doc : `/Users/clems/ailiance-mac-tuner/docs/plans/2026-04-15-mistral-small-opus-distill.md`
 - À écrire au moment de lancer :
   - `scripts/sample_mega_prompts.py` (~30 lignes, stratified sampler)
   - `scripts/fuse_and_quantize.py` (~50 lignes, wraps unsloth merge + llama.cpp convert + quantize)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Train eu-kiki LoRA adapters using HF-traced data via mlx_lm_fork.
+"""Train ailiance LoRA adapters using HF-traced data via mlx_lm_fork.
 
 Trains sequentially: Devstral (python) → EuroLLM (chat-fr) → Apertus (math)
 Uses only HF-traceable datasets for EU AI Act compliance.
 
 Usage:
-    cd ~/KIKI-Mac_tunner
+    cd ~/ailiance-mac-tuner
     .venv/bin/python scripts/train_eu_kiki_hf_batch.py
 """
 import mlx.core as mx
@@ -19,18 +19,18 @@ import yaml
 import shutil
 from pathlib import Path
 
-sys.path.insert(0, "/Users/clems/KIKI-Mac_tunner/lib")
+sys.path.insert(0, "/Users/clems/ailiance-mac-tuner/lib")
 
 PROJECT = Path(__file__).parent.parent
-EU_KIKI = Path.home() / "eu-kiki"
-HF_DATA = EU_KIKI / "data" / "hf-traced"
+AILIANCE = Path.home() / "ailiance"
+HF_DATA = AILIANCE / "data" / "hf-traced"
 
 JOBS = [
     {
         "name": "devstral-python-hf",
         "model": str(PROJECT / "models" / "Devstral-Small-2-24B-Instruct-2512"),
         "data": str(HF_DATA / "python"),
-        "output": str(PROJECT / "output" / "eu-kiki-hf" / "devstral-python"),
+        "output": str(PROJECT / "output" / "ailiance-hf" / "devstral-python"),
         "adapter_dest": "devstral/python",
         "grad_accum": 4,
         "max_seq": 2048,
@@ -40,7 +40,7 @@ JOBS = [
         "name": "eurollm-chatfr-hf",
         "model": str(PROJECT / "models" / "EuroLLM-22B-Instruct-2512"),
         "data": str(HF_DATA / "chat-fr"),
-        "output": str(PROJECT / "output" / "eu-kiki-hf" / "eurollm-chat-fr"),
+        "output": str(PROJECT / "output" / "ailiance-hf" / "eurollm-chat-fr"),
         "adapter_dest": "eurollm/chat-fr",
         "grad_accum": 4,
         "max_seq": 2048,
@@ -50,7 +50,7 @@ JOBS = [
         "name": "apertus-math-hf",
         "model": str(PROJECT / "models" / "Apertus-70B-Instruct-2509"),
         "data": str(HF_DATA / "math-reasoning"),
-        "output": str(PROJECT / "output" / "eu-kiki-hf" / "apertus-math"),
+        "output": str(PROJECT / "output" / "ailiance-hf" / "apertus-math"),
         "adapter_dest": "apertus/math",
         "grad_accum": 8,
         "max_seq": 1024,
@@ -121,10 +121,10 @@ def train_one(job: dict) -> bool:
     elapsed = time.time() - t0
     print(f"\n  {name}: done in {elapsed/60:.1f} min")
 
-    # Copy adapter to eu-kiki
+    # Copy adapter to ailiance
     adapter_src = Path(output) / "adapters.safetensors"
     if adapter_src.exists():
-        dest = EU_KIKI / "output" / "adapters" / job["adapter_dest"]
+        dest = AILIANCE / "output" / "adapters" / job["adapter_dest"]
         dest.mkdir(parents=True, exist_ok=True)
         shutil.copy2(str(adapter_src), str(dest / "adapters.safetensors"))
         size_mb = adapter_src.stat().st_size / 1048576
@@ -134,7 +134,7 @@ def train_one(job: dict) -> bool:
 
 
 def main():
-    print("eu-kiki HF-traced LoRA batch training")
+    print("ailiance HF-traced LoRA batch training")
     print(f"Jobs: {len(JOBS)}")
 
     results = []

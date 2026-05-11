@@ -1,5 +1,5 @@
 #!/bin/bash
-# Monitoring autonome des pipelines KIKI-Mac_tunner
+# Monitoring autonome des pipelines ailiance-mac-tuner
 # Tourne en fond, log dans logs/monitor.log
 # Utilisation : ./scripts/monitor.sh [start|stop|status|tail]
 

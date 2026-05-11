@@ -1,6 +1,6 @@
 # scripts/
 
-Scripts bash et Python pour le pipeline KIKI-Mac_tunner : telechargement,
+Scripts bash et Python pour le pipeline ailiance-mac-tuner : telechargement,
 conversion, training, distillation, export GGUF, monitoring.
 
 Voir `CLAUDE.md` dans ce dossier pour les conventions internes.

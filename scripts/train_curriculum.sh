@@ -4,7 +4,7 @@
 # Usage : ./scripts/train_curriculum.sh [prepare|phase1|phase2|phase3|all]
 
 set -e
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 
 MODEL="models/Qwen3.5-122B-A10B-BF16"

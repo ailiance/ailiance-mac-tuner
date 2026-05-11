@@ -27,7 +27,7 @@ from pathlib import Path
 # ── Config ──────────────────────────────────────────────────────────────────
 
 QWEN35_CONFIG_PATHS = [
-    Path("/Users/clems/KIKI-Mac_tunner/models/Qwen3.5-35B-A3B-Opus-bf16/config.json"),
+    Path("/Users/clems/ailiance-mac-tuner/models/Qwen3.5-35B-A3B-Opus-bf16/config.json"),
 ]
 
 DEFAULT_DELTANET_CONFIG = {

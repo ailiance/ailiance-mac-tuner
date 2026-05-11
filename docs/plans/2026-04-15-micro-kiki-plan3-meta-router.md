@@ -358,7 +358,7 @@ class TestPoolingStrategy:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_meta_router.py tests/micro_kiki/test_hidden_extractor.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_meta_router.py tests/micro_kiki/test_hidden_extractor.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'scripts.micro_kiki'`
 
 - [ ] **Step 3: Create package init files**
@@ -844,13 +844,13 @@ data:
 
 - [ ] **Step 8: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_meta_router.py tests/micro_kiki/test_hidden_extractor.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_meta_router.py tests/micro_kiki/test_hidden_extractor.py -v`
 Expected: All tests PASS
 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/__init__.py scripts/micro_kiki/constants.py scripts/micro_kiki/meta_router.py scripts/micro_kiki/hidden_extractor.py configs/micro-kiki-router.yaml tests/micro_kiki/__init__.py tests/micro_kiki/test_meta_router.py tests/micro_kiki/test_hidden_extractor.py
 git commit -m "feat(micro-kiki): add MetaRouter model, constants, hidden extractor, and config"
 ```
@@ -1004,7 +1004,7 @@ class TestBuildTargetVector:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_outcome_discovery.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_outcome_discovery.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
 - [ ] **Step 3: Write the outcome discovery module**
@@ -1247,13 +1247,13 @@ def run_outcome_discovery(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_outcome_discovery.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_outcome_discovery.py -v`
 Expected: All 8 tests PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/outcome_discovery.py tests/micro_kiki/test_outcome_discovery.py
 git commit -m "feat(micro-kiki): add outcome discovery for router training targets (32 forwards per prompt)"
 ```
@@ -1442,7 +1442,7 @@ class TestTrainRouter:
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_router_dataset.py tests/micro_kiki/test_train_router.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_router_dataset.py tests/micro_kiki/test_train_router.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
 - [ ] **Step 4: Write the RouterDataset**
@@ -1833,13 +1833,13 @@ def train_router(
 
 - [ ] **Step 6: Run all training tests**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_router_dataset.py tests/micro_kiki/test_train_router.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_router_dataset.py tests/micro_kiki/test_train_router.py -v`
 Expected: All 10 tests PASS
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/router_dataset.py scripts/micro_kiki/train_router.py tests/micro_kiki/test_router_dataset.py tests/micro_kiki/test_train_router.py
 git commit -m "feat(micro-kiki): add router dataset, BCE+margin training loop, cosine LR schedule"
 ```
@@ -2024,7 +2024,7 @@ class TestMaxActiveStacksEnforced:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_inference.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_inference.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
 - [ ] **Step 3: Write the inference pipeline**
@@ -2275,13 +2275,13 @@ class InferencePipeline:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_inference.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_inference.py -v`
 Expected: All 4 tests PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/inference.py tests/micro_kiki/test_inference.py
 git commit -m "feat(micro-kiki): add full inference pipeline with router + stack application"
 ```
@@ -2423,7 +2423,7 @@ class TestStackManagerInvalidIndex:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_stack_manager.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_stack_manager.py -v`
 Expected: FAIL with `ModuleNotFoundError`
 
 - [ ] **Step 3: Write the StackManager**
@@ -2605,13 +2605,13 @@ class StackManager:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/test_stack_manager.py -v`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/test_stack_manager.py -v`
 Expected: All 10 tests PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/stack_manager.py tests/micro_kiki/test_stack_manager.py
 git commit -m "feat(micro-kiki): add LRU-cached disk-offloaded stack manager"
 ```
@@ -2929,26 +2929,26 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run the full test suite**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/ -v --tb=short`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/ -v --tb=short`
 Expected: All tests PASS across all test files
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add scripts/micro_kiki/validate.py
 git commit -m "feat(micro-kiki): add validation suite (param count, latency, routing accuracy, chat floor)"
 ```
 
 - [ ] **Step 4: Run all tests one final time**
 
-Run: `cd /Users/clems/KIKI-Mac_tunner && .venv/bin/python -m pytest tests/micro_kiki/ -v --tb=short 2>&1 | tail -30`
+Run: `cd /Users/clems/ailiance-mac-tuner && .venv/bin/python -m pytest tests/micro_kiki/ -v --tb=short 2>&1 | tail -30`
 Expected: All tests PASS, 0 failures
 
 - [ ] **Step 5: Final commit with plan**
 
 ```bash
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 git add docs/plans/2026-04-15-micro-kiki-plan3-meta-router.md
 git commit -m "docs(micro-kiki): rewrite Plan 3 meta-router with 6-task structure"
 ```

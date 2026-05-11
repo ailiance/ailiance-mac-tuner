@@ -62,7 +62,7 @@ def find_data(domain: str) -> Path | None:
     """Find training data for domain."""
     candidates = [
         Path(f"data/distilled/{domain}.jsonl"),
-        Path.home() / "KIKI-Mac_tunner" / "data" / "micro-kiki" / domain / "train.jsonl",
+        Path.home() / "ailiance-mac-tuner" / "data" / "micro-kiki" / domain / "train.jsonl",
     ]
     for p in candidates:
         if p.exists() and p.stat().st_size > 0:

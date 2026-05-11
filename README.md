@@ -1,4 +1,4 @@
-# KIKI-Mac_tunner
+# ailiance-mac-tuner
 
 Fine-tune large language models on Apple Silicon using the full unified memory — no quantization needed.
 
@@ -7,9 +7,9 @@ Fine-tune large language models on Apple Silicon using the full unified memory �
 Distills Claude Opus reasoning into open-source LLMs (Mistral Large 123B, Qwen3.5-122B-A10B, Devstral 2 123B) using MLX on a single Mac Studio. BF16 full-precision training with LoRA, enabled by 512 GB unified memory.
 
 Includes:
-- **EU-KIKI v2** — 3-phase curriculum training (seq 512→1280→4096) on Qwen3.6-35B-A3B (31 domains) + Mistral Medium 3.5 128B (33 domains)
+- **AILIANCE v2** — 3-phase curriculum training (seq 512→1280→4096) on Qwen3.6-35B-A3B (31 domains) + Mistral Medium 3.5 128B (33 domains)
 - **Brainstacks** — 32-expert MoE-LoRA fleet on Qwen3.5 with null-space projection (zero-forgetting continual learning)
-- **eu-kiki v1** — EU-sovereign training stack (Apertus 70B / Devstral 2 24B / EuroLLM 22B) with EU AI Act-compliant dataset provenance
+- **ailiance v1** — EU-sovereign training stack (Apertus 70B / Devstral 2 24B / EuroLLM 22B) with EU AI Act-compliant dataset provenance
 - **SpikingKiki** — LoRA → spiking neural network conversion track (LAS rate-coded)
 - **ANE hybrid pipeline** — DeltaNet on Apple Neural Engine for hybrid inference
 - **Meta-router** — 32-domain attention-pooling router for stack dispatch
@@ -76,7 +76,7 @@ Peak memory for 122B training: 383 GB (failed to allocate beyond).
 
 > ⚠️ **Suite non lancée** : Q4 quantization, smoke test (`smoke_spikingbrain.py`), energy bench ANN vs SNN — aucun log post-conversion.
 
-### EU-KIKI v2 — curriculum training (active)
+### AILIANCE v2 — curriculum training (active)
 
 3-phase curriculum: seq 512→1280→4096, LR 8e-6→5e-6→3e-6. Resume-safe (skips completed phases).
 
@@ -86,9 +86,9 @@ Peak memory for 122B training: 383 GB (failed to allocate beyond).
 | Mistral Medium 3.5 128B BF16 | 33 | r16/α32, all layers | 2048 | **0/33** — starts after Qwen36 completes |
 
 Scripts: `train_eu_kiki_v2_curriculum.sh` (3-phase), `train_eu_kiki_v2_batch.sh` (flat), `train_eu_kiki_v2_retry_failed.sh` (Metal-crash recovery, batch=1).
-Configs: `configs/eu-kiki-v2-qwen36-*.yaml` (per-domain probes).
-Output: `output/eu-kiki-v2-curriculum/{qwen36,medium35}-<domain>/`.
-Data: `~/eu-kiki/data/hf-traced/` (36 domains).
+Configs: `configs/ailiance-v2-qwen36-*.yaml` (per-domain probes).
+Output: `output/ailiance-v2-curriculum/{qwen36,medium35}-<domain>/`.
+Data: `~/ailiance/data/hf-traced/` (36 domains).
 
 #### Adaptive curriculum (iters / dropout vs dataset size)
 
@@ -103,14 +103,14 @@ Detected at start of each domain by counting `train.jsonl` lines. Anti-overfit o
 
 Implemented in `train_eu_kiki_v2_curriculum.sh`. Domains without `train.jsonl` are silently skipped (P2 hardening: add explicit warning).
 
-### eu-kiki v1 training (sister project)
+### ailiance v1 training (sister project)
 
 | Model | Adapters trained | Total target | Status |
 |-------|------------------|--------------|--------|
 | Apertus 70B | 6 (electronics-hw, embedded, math, math-gsm8k, math-reasoning, spice-sim) | 8 | **PARTIAL** — manque `emc-dsp-power`, `security-fenrir` |
 | Devstral 2 24B | 22 | 22 | **DONE** |
 | EuroLLM 22B | 3 (chat-fr, multilingual-eu, traduction-tech) | 4 | **PARTIAL** |
-| Router 32-domain | trained | — | **DONE** (`~/eu-kiki/output/router/router.safetensors`) |
+| Router 32-domain | trained | — | **DONE** (`~/ailiance/output/router/router.safetensors`) |
 | Eval framework | code prêt (52 ko, EU AI Act Art. 53(1)(d)) | — | **JAMAIS LANCÉ** — `output/eval/raw/` vide |
 
 ### HuggingFace publications
@@ -129,7 +129,7 @@ Deux comptes HF hébergent les adapters du projet (audit 2026-05-04) :
 
 **Pas encore publiés**
 - `output/mistral-large-opus/adapters.safetensors` (3.36 GB, terminé iter 1100, dormant 21+ j)
-- Stack EU-KIKI v1 (Apertus 70B + Devstral 24B + EuroLLM 22B) → repo privé [`L-electron-Rare/eu-kiki`](https://github.com/L-electron-Rare/eu-kiki)
+- Stack AILIANCE v1 (Apertus 70B + Devstral 24B + EuroLLM 22B) → repo privé [`ailiance/ailiance`](https://github.com/ailiance/ailiance)
 
 Le script `scripts/release_hf.py` reste en mode dry-run, jamais lancé avec `--execute` (les publications existantes ont été faites manuellement).
 
@@ -229,17 +229,17 @@ Curriculum : sequence extended progressively, LR decreasing, batch raised to 2 o
 
 `configs/micro-kiki-router.yaml` — Qwen3.5-4B frozen base, hidden=3072, MLP hidden=512, **top-k=4**, `chat_floor=0.20`, `gate_threshold=0.12`, attention pooling. Trained via `scripts/train_router.py` + `scripts/train_vqc_router.py` (variational quantum classifier comparison).
 
-## eu-kiki — EU-sovereign sister stack
+## ailiance — EU-sovereign sister stack
 
-Sister project (`~/Documents/Projets/eu-kiki/`) using only EU/Swiss-origin models with full EU AI Act Article 52/53 transparency.
+Sister project (`~/Documents/Projets/ailiance/`) using only EU/Swiss-origin models with full EU AI Act Article 52/53 transparency.
 
 | Model | Origin | Domains | Config |
 |-------|--------|---------|--------|
-| Apertus 70B Instruct | EPFL+ETH+CSCS (CH) | 20 (electronics, EMC, DSP, SPICE, KiCad, STM32, IoT, embedded, MISRA-C, AUTOSAR, IEC norms…) | `configs/eu-kiki-apertus-electronics.yaml` |
-| Devstral 2 24B MLX-4bit | Mistral AI (FR) | 16 (Python, Rust, TS, C++, shell, SQL, web, Docker, devops, llm-ops, ml-training…) | `configs/eu-kiki-devstral-python.yaml` |
-| EuroLLM 22B Instruct | utter-project (EU) | 4 (chat-fr, traduction-tech, redaction-multilingue, localisation-doc) | `configs/eu-kiki-eurollm-chatfr.yaml` |
+| Apertus 70B Instruct | EPFL+ETH+CSCS (CH) | 20 (electronics, EMC, DSP, SPICE, KiCad, STM32, IoT, embedded, MISRA-C, AUTOSAR, IEC norms…) | `configs/ailiance-apertus-electronics.yaml` |
+| Devstral 2 24B MLX-4bit | Mistral AI (FR) | 16 (Python, Rust, TS, C++, shell, SQL, web, Docker, devops, llm-ops, ml-training…) | `configs/ailiance-devstral-python.yaml` |
+| EuroLLM 22B Instruct | utter-project (EU) | 4 (chat-fr, traduction-tech, redaction-multilingue, localisation-doc) | `configs/ailiance-eurollm-chatfr.yaml` |
 
-All 3 trained via `scripts/train_eu_kiki_{apertus,devstral,eurollm}.py` + sequential `train_eu_kiki_batch.py` and HF-traceable `train_eu_kiki_hf_batch.py`. LoRA r16/α32 on `q/k/v/o_proj`, all-linear bf16. See `eu-kiki/docs/eu-ai-act-transparency.md` for full provenance.
+All 3 trained via `scripts/train_eu_kiki_{apertus,devstral,eurollm}.py` + sequential `train_eu_kiki_batch.py` and HF-traceable `train_eu_kiki_hf_batch.py`. LoRA r16/α32 on `q/k/v/o_proj`, all-linear bf16. See `ailiance/docs/eu-ai-act-transparency.md` for full provenance.
 
 ## Sonnet-Devstral Pipeline
 
@@ -286,16 +286,16 @@ Config: `configs/mlx-lm-devstral2-sonnet.yaml` — LoRA rank 64, 4096 seq, 2000 
 
 - `benchmark_quantum_router.py` — pas de fichier sortie
 - `energy_bench.py` — calcul théorique pur (FLOPs ANN vs SNN), pas de sortie persistée
-- `~/eu-kiki/scripts/eval_framework.py` (52 ko, EU AI Act Art. 53(1)(d)) — `output/eval/raw/` vide
+- `~/ailiance/scripts/eval_framework.py` (52 ko, EU AI Act Art. 53(1)(d)) — `output/eval/raw/` vide
 
 ### Pas de framework central
 
 Pas de Makefile ni CI. 3 wrappers shell :
 - `scripts/run_full_eval.sh` — 3/4 étapes sont des `echo` placeholders
 - `scripts/run_forgetting.sh` — appelle `python -m src.eval.forgetting` avec stack-id
-- `~/eu-kiki/scripts/run_eval.sh` — le plus propre (pre-flight checks, parsing CLI)
+- `~/ailiance/scripts/run_eval.sh` — le plus propre (pre-flight checks, parsing CLI)
 
-> 📋 **Lacunes** : pas de pass@1 / HumanEval / MBPP / GSM8K / MMLU-Pro câblés. Pas de versionning des résultats (écrasés à chaque run). Pas de standard de chemin de sortie (`results/` vs `output/micro-kiki/eval/` vs `~/eu-kiki/output/eval/raw/`).
+> 📋 **Lacunes** : pas de pass@1 / HumanEval / MBPP / GSM8K / MMLU-Pro câblés. Pas de versionning des résultats (écrasés à chaque run). Pas de standard de chemin de sortie (`results/` vs `output/micro-kiki/eval/` vs `~/ailiance/output/eval/raw/`).
 
 ## Cognitive runtime modules
 
@@ -319,10 +319,10 @@ Pas de Makefile ni CI. 3 wrappers shell :
 ## Architecture
 
 ```
-KIKI-Mac_tunner/
+ailiance-mac-tuner/
 ├── setup.sh / download.sh / train.sh / export.sh   # main workflow
 ├── configs/                       # training + generation YAML configs
-│   ├── eu-kiki-{apertus,devstral,eurollm}-*.yaml   # EU-sovereign training
+│   ├── ailiance-{apertus,devstral,eurollm}-*.yaml   # EU-sovereign training
 │   ├── mlx-lm-micro-kiki-phase{1,2,3}.yaml         # 35B Brainstacks curriculum
 │   ├── micro-kiki-router.yaml                      # 32-domain meta-router
 │   └── micro_kiki/brainstacks.yaml                 # 32-stack fleet (Phase 7 added)

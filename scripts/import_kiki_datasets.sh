@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Import domain datasets from KIKI-models-tuning to micro-kiki
+# Import domain datasets from ailiance-models-tuning to micro-kiki
 set -euo pipefail
-SRC="${1:-$HOME/Documents/Projets/Factory 4 Life/KIKI-models-tuning/datasets/processed}"
+SRC="${1:-$HOME/Documents/Projets/Factory 4 Life/ailiance-models-tuning/datasets/processed}"
 DST="data/distilled"
 mkdir -p "${DST}"
 for f in embedded stm32 iot freecad platformio power emc dsp spice kicad; do

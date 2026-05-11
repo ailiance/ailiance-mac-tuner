@@ -4,7 +4,7 @@
 # Usage: ./scripts/merge_lora.sh
 
 set -e
-cd /Users/clems/KIKI-Mac_tunner
+cd /Users/clems/ailiance-mac-tuner
 source .venv/bin/activate
 
 echo "=== Phase 5 : Merge final ==="

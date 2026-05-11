@@ -15,7 +15,7 @@
 set -euo pipefail
 
 STUDIO_HOST="${STUDIO_HOST:-studio}"
-STUDIO_VENV="${STUDIO_VENV:-/Users/clems/KIKI-Mac_tunner/.venv-neuroscience}"
+STUDIO_VENV="${STUDIO_VENV:-/Users/clems/ailiance-mac-tuner/.venv-neuroscience}"
 MIN_FREE_GB="${MIN_FREE_GB:-20}"
 
 DRY_RUN=0
@@ -49,12 +49,12 @@ if [[ $REMOTE_STUDIO -eq 1 ]]; then
   SCRIPT_NAME="$(basename "$0")"
   if [[ $DRY_RUN -eq 1 ]]; then
     printf '[dry-run] ssh %s "cd %s && bash scripts/%s"\n' \
-      "$STUDIO_HOST" "/Users/clems/KIKI-Mac_tunner" "$SCRIPT_NAME"
+      "$STUDIO_HOST" "/Users/clems/ailiance-mac-tuner" "$SCRIPT_NAME"
     exit 0
   fi
   # Assumes the repo is already checked out at that path on Studio.
   ssh "$STUDIO_HOST" \
-    "cd /Users/clems/KIKI-Mac_tunner && bash scripts/${SCRIPT_NAME}"
+    "cd /Users/clems/ailiance-mac-tuner && bash scripts/${SCRIPT_NAME}"
   exit $?
 fi
 

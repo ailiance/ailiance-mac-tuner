@@ -1,4 +1,4 @@
-# KIKI-Mac_tunner
+# ailiance-mac-tuner
 
 Fine-tuning LLMs sur Apple Silicon (512 Go RAM unifiée) via MLX.
 Distille le raisonnement Claude Opus dans des modèles open-source.
@@ -19,7 +19,7 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 |-------|--------|---------|
 | **Foundation distill** | `./train.sh`, `scripts/train_122b_macport.sh` | Mistral Large 123B, Qwen3.5-122B-A10B, Qwen3.5-35B-A3B |
 | **Brainstacks 32-fleet** | `scripts/micro_kiki/train_all_stacks.sh` | Qwen3.5-4B (RTX 4090) + Qwen3.5-35B-A3B-Opus (curriculum 3 phases) |
-| **eu-kiki** | `scripts/train_eu_kiki_batch.py` | Apertus 70B (CH), Devstral 2 24B (FR), EuroLLM 22B (EU) |
+| **ailiance** | `scripts/train_eu_kiki_batch.py` | Apertus 70B (CH), Devstral 2 24B (FR), EuroLLM 22B (EU) |
 | **Sonnet-Devstral** | `scripts/train_devstral_sonnet.py` | Devstral 2 123B dense |
 | **SpikingKiki** | `scripts/convert_lora_to_snn.py`, `convert_spikingkiki_35b.py` | Qwen3.6-35B-A3B → SNN LAS |
 | **ANE hybrid** | `research/ane-hybrid/` | DeltaNet → CoreML/ANE |
@@ -30,13 +30,13 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 | Tâche | Emplacement |
 |-------|-------------|
 | Configs training/generation | `configs/` |
-| Configs eu-kiki (3 modèles EU) | `configs/eu-kiki-*.yaml` |
+| Configs ailiance (3 modèles EU) | `configs/ailiance-*.yaml` |
 | Configs micro-kiki 35B curriculum | `configs/mlx-lm-micro-kiki-phase{1,2,3}.yaml` |
 | Config meta-router 32 domaines | `configs/micro-kiki-router.yaml` |
 | Config Brainstacks 32 piles | `configs/micro_kiki/brainstacks.yaml` |
 | Scripts foundation distill | `scripts/train_*.py`, `scripts/distill*.sh` |
 | Scripts Brainstacks | `scripts/micro_kiki/` |
-| Scripts eu-kiki | `scripts/train_eu_kiki_*.py` |
+| Scripts ailiance | `scripts/train_eu_kiki_*.py` |
 | Scripts SpikingBrain/SNN | `scripts/convert_*spiking*.py`, `scripts/quantize_spikingbrain.py` |
 | Scripts bench/eval | `scripts/bench_*.py`, `scripts/eval_*.py` |
 | Datasets | `data/` |
@@ -79,7 +79,7 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 
 ### 🟠 Important non-bloquant
 
-- Lancer `~/eu-kiki/scripts/run_eval.sh --mode compare` (eval framework prêt mais `output/eval/raw/` vide). 3-5 h compute.
+- Lancer `~/ailiance/scripts/run_eval.sh --mode compare` (eval framework prêt mais `output/eval/raw/` vide). 3-5 h compute.
 - Compléter Apertus (`emc-dsp-power`, `security-fenrir`) + EuroLLM (1 manquant). 12-15 h compute.
 - Lancer Mistral-Small-Opus + Devstral v4 sur kxkm-ai (RTX 4090, plans-only à ce jour). 3-5 j.
 - Quantization SpikingKiki Q4 + smoke test `smoke_spikingbrain.py` + energy bench réel. 1 j.
@@ -88,7 +88,7 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 
 ### 🟡 Cleanup
 
-- Publier sur HF `mistral-large-opus` (3.36 GB, dormant) + stack EU-KIKI v1 (Apertus/Devstral/EuroLLM) — pas encore sur `clemsail/` ni `electron-rare/`. `scripts/release_hf.py` prêt en dry-run, jamais lancé `--execute`. (3-4 h)
+- Publier sur HF `mistral-large-opus` (3.36 GB, dormant) + stack AILIANCE v1 (Apertus/Devstral/EuroLLM) — pas encore sur `clemsail/` ni `electron-rare/`. `scripts/release_hf.py` prêt en dry-run, jamais lancé `--execute`. (3-4 h)
 - Réconcilier les doublons HF : `clemsail/kiki-{stm32,kicad}-sft` (79+94 dl) vs `electron-rare/kiki-{stm32,kicad}-sft-v1` (0 dl). Archiver les v1 vides ou rapatrier les vrais. (1 h)
 - Compléter les model cards des 5 modèles `clemsail/` à 0 dl (`micro-kiki-{v35b,router-v4,v4-sota}`, `spikingkiki-{35b-a3b-v4,v4-adapters}`). (2 h)
 - Archiver dossiers fantômes (utiliser `tools/archive_dead_artifacts.sh`) :
@@ -109,7 +109,7 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 
 - 39 × `lora-qwen36-35b-v4-sota/*` (~130 GB, terminés Apr 26, jamais re-benchés)
 - 32 × `stacks-v3-r16/*` (14 GB, effondrés, à supprimer)
-- 31 × `~/eu-kiki/output/adapters/{apertus,devstral,eurollm}/*` (eval pas lancée)
+- 31 × `~/ailiance/output/adapters/{apertus,devstral,eurollm}/*` (eval pas lancée)
 - 1 × `output/mistral-large-opus/adapters.safetensors` (3.36 GB, dormant 21 jours, ni mergé ni publié)
 
 ## Anti-Patterns

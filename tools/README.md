@@ -20,7 +20,7 @@ Sur Studio :
 
 Depuis GrosMac (TTY requis) :
 ```bash
-ssh -t studio "cd KIKI-Mac_tunner && .venv/bin/python tools/train_monitor_tui.py"
+ssh -t studio "cd ailiance-mac-tuner && .venv/bin/python tools/train_monitor_tui.py"
 ```
 
 Options principales :
@@ -34,11 +34,11 @@ Options principales :
 
 ```bash
 # Sur Studio (où les vraies cibles existent) :
-ssh studio "cd KIKI-Mac_tunner && bash tools/archive_dead_artifacts.sh"             # dry-run par défaut
-ssh studio "cd KIKI-Mac_tunner && bash tools/archive_dead_artifacts.sh --execute"   # archive vraiment
+ssh studio "cd ailiance-mac-tuner && bash tools/archive_dead_artifacts.sh"             # dry-run par défaut
+ssh studio "cd ailiance-mac-tuner && bash tools/archive_dead_artifacts.sh --execute"   # archive vraiment
 
 # Pour libérer définitivement :
-ssh studio "rm -rf ~/KIKI-Mac_tunner/_archive/<date>"
+ssh studio "rm -rf ~/ailiance-mac-tuner/_archive/<date>"
 ```
 
 Sécurités intégrées :

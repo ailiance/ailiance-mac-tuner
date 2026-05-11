@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EU-KIKI v2 comprehensive benchmark.
+"""AILIANCE v2 comprehensive benchmark.
 
 1. Base vs LoRA (Qwen3.6 + Medium3.5)
 2. Qwen36 vs Medium35 on shared domains
@@ -22,9 +22,9 @@ from dataclasses import dataclass, asdict
 import mlx.core as mx
 from mlx_lm import load, generate
 
-TUNNER = Path("/Users/clems/KIKI-Mac_tunner")
-DATA_DIR = Path("/Users/clems/eu-kiki/data/hf-traced")
-CURRICULUM_DIR = TUNNER / "output/eu-kiki-v2-curriculum"
+TUNNER = Path("/Users/clems/ailiance-mac-tuner")
+DATA_DIR = Path("/Users/clems/ailiance/data/hf-traced")
+CURRICULUM_DIR = TUNNER / "output/ailiance-v2-curriculum"
 RESULTS_DIR = TUNNER / "results"
 
 QWEN_MODEL = str(TUNNER / "models/Qwen3.6-35B-A3B-MLX-BF16")
@@ -196,7 +196,7 @@ def main():
         shared_domains = sorted(set(qwen_domains) & set(medium_domains))
 
     print("=" * 70)
-    print(f"EU-KIKI v2 BENCHMARK")
+    print(f"AILIANCE v2 BENCHMARK")
     print(f"  Qwen36 domains:  {len(qwen_domains)} {qwen_domains}")
     print(f"  Medium35 domains: {len(medium_domains)} {medium_domains}")
     print(f"  Shared (cross-model): {len(shared_domains)} {shared_domains}")
@@ -323,7 +323,7 @@ def main():
                       f"Medium={m['val_ppl']:>8.2f}  → {winner}")
 
     # Save results
-    out_file = RESULTS_DIR / f"eu-kiki-v2-bench-{time.strftime('%Y%m%d-%H%M')}.json"
+    out_file = RESULTS_DIR / f"ailiance-v2-bench-{time.strftime('%Y%m%d-%H%M')}.json"
     with open(out_file, "w") as f:
         json.dump(all_results, f, indent=2, ensure_ascii=False)
     print(f"\nResults saved to {out_file}")

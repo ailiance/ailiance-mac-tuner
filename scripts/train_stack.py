@@ -8,12 +8,12 @@ Usage:
     # Train with custom config:
     UNSLOTH_COMPILE_DISABLE=1 uv run scripts/train_stack.py --config configs/stack-01-chat-fr.yaml
 
-    # Use existing KIKI-Mac_tunner data (default):
+    # Use existing ailiance-mac-tuner data (default):
     UNSLOTH_COMPILE_DISABLE=1 uv run scripts/train_stack.py --domain chat-fr --data-source kiki
 
 Prerequisites:
     - Qwen3.5-35B-A3B downloaded to models/qwen3.5-35b-a3b/ (or use HF repo ID)
-    - Training data in ~/KIKI-Mac_tunner/data/micro-kiki/<domain>/train.jsonl
+    - Training data in ~/ailiance-mac-tuner/data/micro-kiki/<domain>/train.jsonl
     - ~74 GB free RAM for BF16 LoRA training
     - Set UNSLOTH_COMPILE_DISABLE=1 before running
 """
@@ -33,14 +33,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-KIKI_DATA = Path.home() / "KIKI-Mac_tunner" / "data" / "micro-kiki"
+KIKI_DATA = Path.home() / "ailiance-mac-tuner" / "data" / "micro-kiki"
 LOCAL_MODEL = "models/qwen3.5-35b-a3b"
 HF_MODEL = "Qwen/Qwen3.5-35B-A3B"
 
 
 def find_training_data(domain: str) -> Path:
     """Find training data for a domain."""
-    # Priority: local micro-kiki repo data > KIKI-Mac_tunner
+    # Priority: local micro-kiki repo data > ailiance-mac-tuner
     local = Path(f"data/distilled/{domain}.jsonl")
     if local.exists() and local.stat().st_size > 0:
         return local

@@ -1,4 +1,4 @@
-"""Import datasets from KIKI-models-tuning repo for technical domains.
+"""Import datasets from ailiance-models-tuning repo for technical domains.
 
 Usage: uv run scripts/import_kiki_datasets.py --domain embedded
 """
@@ -25,12 +25,12 @@ KIKI_SOURCES = {
     "kicad-pcb": "kiki-kicad-pcb",
 }
 
-LOCAL_KIKI_PATH = Path.home() / "Documents/Projets/Factory 4 Life/KIKI-models-tuning"
-HF_ORG = "L-electron-Rare"
+LOCAL_KIKI_PATH = Path.home() / "Documents/Projets/Factory 4 Life/ailiance-models-tuning"
+HF_ORG = "ailiance"
 
 
 def find_local_dataset(domain: str) -> Path | None:
-    """Look for dataset in local KIKI-models-tuning repo."""
+    """Look for dataset in local ailiance-models-tuning repo."""
     kiki_name = KIKI_SOURCES.get(domain, f"kiki-{domain}")
     candidates = [
         LOCAL_KIKI_PATH / "data" / f"{kiki_name}.jsonl",

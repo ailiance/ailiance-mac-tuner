@@ -43,7 +43,7 @@ logger = logging.getLogger("train_grpo_niches")
 
 PROJECT_ROOT = Path(__file__).parent.parent
 MERGED_DATA = PROJECT_ROOT / "data" / "merged"
-KIKI_DATA = Path.home() / "KIKI-Mac_tunner" / "data" / "micro-kiki"
+KIKI_DATA = Path.home() / "ailiance-mac-tuner" / "data" / "micro-kiki"
 MODEL_PATH = PROJECT_ROOT / "models" / "qwen3.5-35b-a3b"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs" / "stacks"
 
