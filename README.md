@@ -115,23 +115,31 @@ Implemented in `train_eu_kiki_v2_curriculum.sh`. Domains without `train.jsonl` a
 
 ### HuggingFace publications
 
-Deux comptes HF hébergent les adapters du projet (audit 2026-05-04) :
+Post-2026-05-11 ailiance carve-out : adapters et datasets de production publiés
+sous l'org [`Ailiance-fr`](https://huggingface.co/Ailiance-fr).
 
-**`clemsail/` (perso)** — 16 modèles
-- `micro-kiki-v3` — 242 dl, 4♥ (le plus utilisé)
-- 10 × `kiki-{kicad,stm32,platformio,iot,freecad,power,emc,spice,embedded,dsp}-sft` — 46–94 dl chacun
-- 5 × récents à 0 dl (`micro-kiki-v35b`, `micro-kiki-router-v4`, `micro-kiki-v4-sota`, `spikingkiki-35b-a3b-v4`, `spikingkiki-v4-adapters`) → model cards à compléter
+**`Ailiance-fr/` (org)** — 15 modèles + 13 datasets
+- 10 × adapters Apache-2.0 (devstral×4, apertus×3, eurollm, routers minilm×2)
+- 5 × `qwen3-4b-mascarade-{kicad,spice,stm32,emc,embedded}-lora`
+  (validés bench Phase 6, voir [`ailiance/ailiance-bench`](https://github.com/ailiance/ailiance-bench))
+- 13 datasets `mascarade-*-dataset` + `kicad9plus-{permissive,copyleft}` + `kill-life-embedded-qa`
 
-**`electron-rare/` (org)** — 8 modèles, 9 datasets, 1 Space
-- 6 × `mascarade-{esp32,iot,kicad-v2-lora,platformio,spice,spice-v1-lora}` — 1–7 dl
-- 2 × `kiki-{stm32,kicad}-sft-v1` (0 dl, doublons des `clemsail/` à réconcilier)
-- 9 datasets `mascarade-{stm32,spice,iot,power,dsp,emc,kicad,embedded}-dataset` + `kill-life-embedded-qa`
+**Legacy `clemsail/` (perso)** — rename-ghosts post-migration
+- 16 modèles historiques redirigent vers `Ailiance-fr/` (HF rename redirects)
+- 5 × à 0 dl restent legacy (`micro-kiki-{v35b,router-v4,v4-sota}`, `spikingkiki-{35b-a3b-v4,v4-adapters}`) — model cards à enrichir ou archiver
+
+**Legacy `electron-rare/` (org)** — archive post-carve-out
+- 8 datasets résiduels avec disclosure warnings (voir mémoire `project_ailiance_org_2026_05_11.md`)
+- Tous les datasets actifs sont publiés sous `Ailiance-fr/`
 
 **Pas encore publiés**
 - `output/mistral-large-opus/adapters.safetensors` (3.36 GB, terminé iter 1100, dormant 21+ j)
-- Stack AILIANCE v1 (Apertus 70B + Devstral 24B + EuroLLM 22B) → repo privé [`ailiance/ailiance`](https://github.com/ailiance/ailiance)
+- Stack AILIANCE v1 (Apertus 70B + Devstral 24B + EuroLLM 22B) tourne en prod via
+  [`ailiance/ailiance`](https://github.com/ailiance/ailiance), modèles base upstream non re-publiés
 
-Le script `scripts/release_hf.py` reste en mode dry-run, jamais lancé avec `--execute` (les publications existantes ont été faites manuellement).
+Le script `scripts/release_hf.py` reste en mode dry-run, jamais lancé avec
+`--execute` (les publications ont été faites manuellement ou via les scripts
+de migration 2026-05-11 dans `ailiance/ailiance`).
 
 ## Inference Benchmarks
 
