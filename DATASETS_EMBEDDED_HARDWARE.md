@@ -63,19 +63,19 @@
 - **Licence**: Apache 2.0
 - **Lien**: https://huggingface.co/datasets/ZiHDeng/hf-stm32-v1
 
-#### 5. electron-rare/mascarade-stm32-dataset (NOTRE DATASET)
+#### 5. Ailiance-fr/mascarade-stm32-dataset (NOTRE DATASET)
 - **Source**: HuggingFace
 - **Taille**: 1K-10K exemples
 - **Format**: JSON
 - **Downloads**: 10
-- **Lien**: https://huggingface.co/datasets/electron-rare/mascarade-stm32-dataset
+- **Lien**: https://huggingface.co/datasets/Ailiance-fr/mascarade-stm32-dataset
 
-#### 6. electron-rare/kill-life-embedded-qa (NOTRE DATASET)
+#### 6. Ailiance-fr/kill-life-embedded-qa (NOTRE DATASET)
 - **Source**: HuggingFace
 - **Taille**: <1K exemples
 - **Format**: JSON
 - **Downloads**: 51
-- **Lien**: https://huggingface.co/datasets/electron-rare/kill-life-embedded-qa
+- **Lien**: https://huggingface.co/datasets/Ailiance-fr/kill-life-embedded-qa
 
 #### 7. forlinx-embedded/forlinx-downloads
 - **Source**: HuggingFace
@@ -148,12 +148,12 @@
 
 ### C. KiCad / PCB
 
-#### 15. electron-rare/mascarade-kicad-dataset (NOTRE DATASET)
+#### 15. Ailiance-fr/mascarade-kicad-dataset (NOTRE DATASET)
 - **Source**: HuggingFace
 - **Taille**: 1K-10K exemples
 - **Format**: JSON
 - **Downloads**: 14
-- **Lien**: https://huggingface.co/datasets/electron-rare/mascarade-kicad-dataset
+- **Lien**: https://huggingface.co/datasets/Ailiance-fr/mascarade-kicad-dataset
 
 *Aucun autre dataset KiCad structure n'existe sur HuggingFace.*
 

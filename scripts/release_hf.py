@@ -4,8 +4,8 @@
 Dry-run by default — use --execute to actually push.
 
 Usage:
-    uv run python scripts/release_hf.py --repo electron-rare/micro-kiki --adapters outputs/stacks/
-    uv run python scripts/release_hf.py --repo electron-rare/micro-kiki --adapters outputs/stacks/ --execute
+    uv run python scripts/release_hf.py --repo Ailiance-fr/micro-kiki --adapters outputs/stacks/
+    uv run python scripts/release_hf.py --repo Ailiance-fr/micro-kiki --adapters outputs/stacks/ --execute
     uv run python scripts/release_hf.py --help
 """
 from __future__ import annotations
@@ -134,7 +134,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--repo", required=True,
-        help="HuggingFace repo ID (e.g. electron-rare/micro-kiki)",
+        help="HuggingFace repo ID (e.g. Ailiance-fr/micro-kiki)",
     )
     parser.add_argument(
         "--adapters", required=True,

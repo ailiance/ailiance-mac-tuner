@@ -88,9 +88,9 @@ Mac Studio M3 Ultra, 512 Go mémoire unifiée. MLX bf16 complet.
 
 ### 🟡 Cleanup
 
-- Publier sur HF `mistral-large-opus` (3.36 GB, dormant) + stack AILIANCE v1 (Apertus/Devstral/EuroLLM) — pas encore sur `clemsail/` ni `electron-rare/`. `scripts/release_hf.py` prêt en dry-run, jamais lancé `--execute`. (3-4 h)
-- Réconcilier les doublons HF : `clemsail/kiki-{stm32,kicad}-sft` (79+94 dl) vs `electron-rare/kiki-{stm32,kicad}-sft-v1` (0 dl). Archiver les v1 vides ou rapatrier les vrais. (1 h)
-- Compléter les model cards des 5 modèles `clemsail/` à 0 dl (`micro-kiki-{v35b,router-v4,v4-sota}`, `spikingkiki-{35b-a3b-v4,v4-adapters}`). (2 h)
+- Publier sur HF `mistral-large-opus` (3.36 GB, dormant) sous `Ailiance-fr/` (org définitif post-carve-out 2026-05-11). `scripts/release_hf.py` prêt en dry-run, jamais lancé `--execute`. (3-4 h)
+- Doublons HF résolus 2026-05-11 : adapters mascarade `qwen3-4b-mascarade-{kicad,spice,stm32,emc,embedded}-lora` publiés sous `Ailiance-fr/`. Legacy `clemsail/kiki-{stm32,kicad}-sft` redirigent via HF rename. ✅
+- Compléter les model cards des 5 modèles `clemsail/` à 0 dl (`micro-kiki-{v35b,router-v4,v4-sota}`, `spikingkiki-{35b-a3b-v4,v4-adapters}`) ou archiver. (2 h)
 - Archiver dossiers fantômes (utiliser `tools/archive_dead_artifacts.sh`) :
   - `output/micro-kiki/stacks-v3-r16/` (14 GB, lora_B=0)
   - `output/micro-kiki/lora-qwen36-35b-hybrid/*` (dossiers vides)
